@@ -9,7 +9,7 @@
 	},
 	"author": "Katnar",
 	"type": "commonjs",
-	"main": "server.ts",
+	"main": "src/server.ts",
 	"scripts": {
 		"prepare": "cd .. && husky Backend/.husky",
 		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
