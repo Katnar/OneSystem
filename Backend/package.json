@@ -10,16 +10,18 @@
 	"author": "Katnar",
 	"type": "commonjs",
 	"main": "server.ts",
-  "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint . --ext .ts --max-warnings 0",
-    "format": "prettier --write \"src/**/*.{ts,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,json}\""
-  },
+	"scripts": {
+		"prepare": "cd .. && husky Backend/.husky",
+		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+		"build": "tsc",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "eslint . --ext .ts --max-warnings 0",
+		"format": "prettier --write \"src/**/*.{ts,json}\"",
+		"format:check": "prettier --check \"src/**/*.{ts,json}\""
+	},
 	"devDependencies": {
 		"@types/node": "^26.6.2",
+		"husky": "^9.1.7",
 		"typescript": "~5.9.3"
 	}
 }
