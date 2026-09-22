@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+echo "Building Frontend..."
+(cd Frontend && npm run build)
+
+echo "Building Backend..."
+(cd Backend && npm run build)
+
+echo "Frontend and Backend builds passed."
