@@ -12,16 +12,30 @@
 	"main": "src/server.ts",
 	"scripts": {
 		"prepare": "cd .. && husky Backend/.husky",
-		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+		"dev": "tsx watch --env-file-if-exists=.env src/server.ts",
 		"build": "tsc",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "npm run build && tsc -p test/tsconfig.json && node --test test/*.test.cjs",
 		"lint": "eslint . --ext .ts --max-warnings 0",
 		"format": "prettier --write \"src/**/*.{ts,json}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,json}\""
 	},
 	"devDependencies": {
+		"@types/cors": "^2.8.19",
+		"@types/morgan": "^1.9.10",
 		"@types/node": "^26.6.2",
 		"husky": "^9.1.7",
+		"tsx": "^4.23.15",
 		"typescript": "~5.9.3"
+	},
+	"dependencies": {
+		"@types/express": "^5.0.6",
+		"@types/jsonwebtoken": "^9.0.10",
+		"cors": "^2.8.6",
+		"dotenv": "^18.0.3",
+		"express": "^5.2.1",
+		"jsonwebtoken": "^9.0.3",
+		"mongoose": "^9.10.2",
+		"morgan": "^1.12.1",
+		"zod": "^4.6.5"
 	}
 }
