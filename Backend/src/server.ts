@@ -7,24 +7,32 @@ import morgan from "morgan";
 import mongoose from "mongoose";
 import { z } from "zod";
 import { mainRouter } from "./index";
-const config = z.object({
-	PORT: z.coerce.number().int().min(0).max(65535).default(3000),
-	MAX_FILE_SIZE_MB: z.coerce.number().positive().default(10),
-}).parse(process.env);
+const config = z
+	.object({
+		PORT: z.coerce.number().int().min(0).max(65535).default(3000),
+	})
+	.parse(process.env);
 
 export const app = express();
 
 app.use(cors());
-app.use(morgan((tokens, req, res) => [
-	`[${new Date().toLocaleString("en-IL", { timeZone: "Asia/Jerusalem" })}]`,
-	tokens.method(req, res),
-	req.url?.split("?")[0],
-	"- Status:", tokens.status(req, res),
-	"- Time:", tokens["response-time"](req, res), "ms",
-].join(" ")));
+app.use(
+	morgan((tokens, req, res) =>
+		[
+			`[${new Date().toLocaleString("en-IL", { timeZone: "Asia/Jerusalem" })}]`,
+			tokens.method(req, res),
+			req.url?.split("?")[0],
+			"- Status:",
+			tokens.status(req, res),
+			"- Time:",
+			tokens["response-time"](req, res),
+			"ms",
+		].join(" ")
+	)
+);
 
-app.use(express.json({ limit: `${config.MAX_FILE_SIZE_MB}mb` }));
-app.use(express.urlencoded({ extended: true, limit: `${config.MAX_FILE_SIZE_MB}mb` }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(mainRouter);
 
 app.use((_req, res) => {

@@ -1,4 +1,8 @@
-import { AuthStatus, type SignUpResultType, type SsoSigninResultType } from "../../../../sharedFiles/auth/authResponses";
+import {
+	AuthStatus,
+	type SignUpResultType,
+	type SsoSigninResultType,
+} from "../../../../sharedFiles/auth/authResponses";
 import { usersModel } from "../../models/user";
 import { rolesModel } from "../../models/role";
 import jwt from "jsonwebtoken";
@@ -22,7 +26,10 @@ function getRequiredEnv(name: string): string | null {
 	return value && value.trim() !== "" ? value : null;
 }
 
-export const rolesEndpoint = async (req: Request, res: Response<{ roles: Role[] } | { error: string }>): Promise<void> => {
+export const rolesEndpoint = async (
+	req: Request,
+	res: Response<{ roles: Role[] } | { error: string }>
+): Promise<void> => {
 	const authHeader = req.headers.authorization;
 	const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : "";
 	if (!ssoClaimsSchema.safeParse(verifySsoToken(token)).success) {
@@ -30,11 +37,13 @@ export const rolesEndpoint = async (req: Request, res: Response<{ roles: Role[] 
 		return;
 	}
 	const roles = await rolesModel.find().sort({ name: 1 }).lean();
-	res.json({ roles: roles.map(role => ({
-		_id: roleIdSchema.parse(role._id.toHexString()),
-		key: role.key,
-		name: role.name,
-	})) });
+	res.json({
+		roles: roles.map(role => ({
+			_id: roleIdSchema.parse(role._id.toHexString()),
+			key: role.key,
+			name: role.name,
+		})),
+	});
 };
 
 export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninResultType>): Promise<void> => {
@@ -87,9 +96,9 @@ export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninRes
 		personalNumber: authUser.personalNumber,
 	};
 
-	const appJwtSecret = getRequiredEnv("HARIGIM_SECRET_KEY_JWT");
+	const appJwtSecret = getRequiredEnv("ONESYSTEM_SECRET_KEY_JWT");
 	if (!appJwtSecret) {
-		console.error("Missing required env var HARIGIM_SECRET_KEY_JWT");
+		console.error("Missing required env var ONESYSTEM_SECRET_KEY_JWT");
 		res.status(500).json({ status: AuthStatus.ServerError });
 		return;
 	}
@@ -139,14 +148,12 @@ export async function signUpEndpoint(req: Request<unknown, unknown, unknown>, re
 			res.status(400).json({
 				success: false,
 				error:
-					existing.approvalStatus === UserApprovalStatus.APPROVED
-						? "משתמש כבר קיים"
-						: "משתמש ממתין לאישור",
+					existing.approvalStatus === UserApprovalStatus.APPROVED ? "משתמש כבר קיים" : "משתמש ממתין לאישור",
 			});
 			return;
 		}
 
-		if (!await rolesModel.exists({ _id: user.role })) {
+		if (!(await rolesModel.exists({ _id: user.role }))) {
 			res.status(400).json({ success: false, error: "תפקיד לא תקין" });
 			return;
 		}
