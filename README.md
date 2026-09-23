@@ -13,11 +13,6 @@ Prerequisites:
 
 Run these commands from the repository root on `dev`:
 
-```sh
-npm install
-npm install
-```
-
 | Backend settings:          |
 | -------------------------- |
 | `MONGO_URL`                | MongoDB connection string.                                      |
@@ -35,9 +30,13 @@ DONT USE OUR REAL PROD KEY FF
 
 Start the apps in **separate** (use ctrl shift 5 to seprate) terminals:
 
+**back**
+
 ```sh
 npm run dev
 ```
+
+**front**
 
 ```sh
 npm run dev
