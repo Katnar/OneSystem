@@ -1,6 +1,6 @@
-import { BrandedString, Mador } from "./global"
+import { BrandedString, Mador, Result } from "./global"
 
-export const {Budget, ...MeshekMador} = Mador; 
+export const {BUDGETS: Budget, ...MeshekMador} = Mador; 
 export type MeshekMador = typeof MeshekMador[keyof typeof MeshekMador]
 export type MeshekID = BrandedString<"meshek id">
 

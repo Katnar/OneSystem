@@ -12,9 +12,9 @@ export type Year = BrandedNumber<"year">
 export type PhoneNumber = BrandedString<"phone number">
 
 export const Mador = {
-	TsamaAndEnergy: 'צמ"ה ואנרגיה',
-	VehiclesAndTransport: 'רכב והובלה',
-	Budget: 'תקציבים'
+	ENGINEERING_AND_ENERGY: 'צמ"ה ואנרגיה',
+	VEHICLE_AND_TRANSPORT: 'רכב והובלה',
+	BUDGETS: 'תקציבים'
 } as const;
 
 export type Mador = typeof Mador[keyof typeof Mador];
