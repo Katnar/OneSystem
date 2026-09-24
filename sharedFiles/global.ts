@@ -9,6 +9,8 @@ export type BrandedNumber<UniqueTypeId extends string> = AssertOnly<number, Uniq
 
 export type Year = BrandedNumber<"year"> 
 
+export type PhoneNumber = BrandedString<"phone number">
+
 export const Mador = {
 	TsamaAndEnergy: 'צמ"ה ואנרגיה',
 	VehiclesAndTransport: 'רכב והובלה',
