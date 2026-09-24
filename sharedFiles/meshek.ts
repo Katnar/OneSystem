@@ -11,3 +11,4 @@ export type MeshekBaseFields = {
 
 export type Meshek = { _id: MeshekID } & MeshekBaseFields
 
+export type GetMesheksResponse = Result<{mesheks: Meshek[]}, string> // GET {api}/meshek
