@@ -8,3 +8,11 @@ export type BrandedString<UniqueTypeId extends string> = AssertOnly<string, Uniq
 export type BrandedNumber<UniqueTypeId extends string> = AssertOnly<number, UniqueTypeId>;
 
 export type Year = BrandedNumber<"year"> 
+
+export const Mador = {
+	TsamaAndEnergy: 'צמ"ה ואנרגיה',
+	VehiclesAndTransport: 'רכב והובלה',
+	Budget: 'תקציבים'
+} as const;
+
+export type Mador = typeof Mador[keyof typeof Mador];
