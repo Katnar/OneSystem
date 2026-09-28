@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { SsoSigninResultType, SignUpResultType } from "../../../sharedFiles/auth/authResponses";
 import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
-import { ssoSigninResultSchema } from "./authValidation";
+import { signUpResultSchema, ssoSigninResultSchema } from "./authValidation";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -26,6 +26,10 @@ export async function ssoSignIn(ssoToken: string): Promise<SsoSigninResultType> 
 }
 
 export async function signUp(payload: SignUpPayload): Promise<SignUpResultType> {
-	const response = await api.post<SignUpResultType>("/auth/signup", payload);
-	return response.data;
+	const response = await api.post<unknown>("/auth/signup", payload);
+	const result = signUpResultSchema.safeParse(response.data);
+	if (!result.success) {
+		throw new Error("Unexpected signup response");
+	}
+	return result.data;
 }

@@ -29,19 +29,19 @@ export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninRes
 	const authHeader = req.headers.authorization;
 
 	if (!authHeader?.startsWith("Bearer ")) {
-		res.status(401).json({ status: AuthStatus.BadToken });
+		res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
 		return;
 	}
 
 	const ssoToken = authHeader.split(" ")[1];
 	if (ssoToken === undefined) {
-		res.status(401).json({ status: AuthStatus.BadToken });
+		res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
 		return;
 	}
 	const claims = ssoClaimsSchema.safeParse(verifySsoToken(ssoToken));
 
 	if (!claims.success) {
-		res.status(401).json({ status: AuthStatus.BadToken });
+		res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
 		return;
 	}
 
@@ -51,16 +51,14 @@ export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninRes
 
 	if (!user) {
 		res.status(404).json({
-			status: AuthStatus.NotFound,
-			firstName,
-			lastName,
-			personalNumber: pn,
+			ok: false,
+			error: { status: AuthStatus.NotFound, firstName, lastName, personalNumber: pn },
 		});
 		return;
 	}
 
 	if (user.approvalStatus !== UserApprovalStatus.APPROVED) {
-		res.status(401).json({ status: AuthStatus.NotApproved });
+		res.status(401).json({ ok: false, error: { status: AuthStatus.NotApproved } });
 		return;
 	}
 
@@ -78,7 +76,7 @@ export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninRes
 	const appJwtSecret = getRequiredEnv("ONESYSTEM_SECRET_KEY_JWT");
 	if (!appJwtSecret) {
 		console.error("Missing required env var ONESYSTEM_SECRET_KEY_JWT");
-		res.status(500).json({ status: AuthStatus.ServerError });
+		res.status(500).json({ ok: false, error: { status: AuthStatus.ServerError } });
 		return;
 	}
 
@@ -87,9 +85,8 @@ export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninRes
 	});
 
 	res.json({
-		status: AuthStatus.Ok,
-		jwt: appJwt,
-		user: authUser,
+		ok: true,
+		result: { jwt: appJwt, user: authUser },
 	});
 };
 
@@ -98,7 +95,7 @@ export async function signUpEndpoint(req: Request<unknown, unknown, unknown>, re
 		const parsedPayload = signUpPayloadSchema.safeParse(req.body);
 		if (!parsedPayload.success) {
 			res.status(400).json({
-				success: false,
+				ok: false,
 				error: "קלט לא תקין",
 			});
 			return;
@@ -108,14 +105,14 @@ export async function signUpEndpoint(req: Request<unknown, unknown, unknown>, re
 
 		const data = verifySsoToken(ssoToken);
 		if (!data) {
-			res.status(400).json({ success: false, error: "קלט לא תקין" });
+			res.status(400).json({ ok: false, error: "קלט לא תקין" });
 			return;
 		}
 
 		const claims = ssoClaimsSchema.safeParse(data);
 		if (!claims.success) {
 			res.status(400).json({
-				success: false,
+				ok: false,
 				error: "מספר אישי לא תקין",
 			});
 			return;
@@ -125,7 +122,7 @@ export async function signUpEndpoint(req: Request<unknown, unknown, unknown>, re
 		const existing = await usersModel.findOne({ personalNumber: pn });
 		if (existing) {
 			res.status(400).json({
-				success: false,
+				ok: false,
 				error:
 					existing.approvalStatus === UserApprovalStatus.APPROVED ? "משתמש כבר קיים" : "משתמש ממתין לאישור",
 			});
@@ -142,8 +139,8 @@ export async function signUpEndpoint(req: Request<unknown, unknown, unknown>, re
 
 		await createdUser.save();
 
-		res.json({ success: true, result: {} });
+		res.json({ ok: true, result: {} });
 	} catch {
-		res.status(400).json({ success: false, error: "קלט לא תקין" });
+		res.status(400).json({ ok: false, error: "קלט לא תקין" });
 	}
 }
