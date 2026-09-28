@@ -1,7 +1,8 @@
 import axios from "axios";
 import type { SsoSigninResultType, SignUpResultType } from "../../../sharedFiles/auth/authResponses";
 import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
-import { ssoSigninResultSchema } from "./authValidation";
+import type { Role } from "../../../sharedFiles/auth/authTypes";
+import { rolesResultSchema, ssoSigninResultSchema } from "./authValidation";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -28,4 +29,15 @@ export async function ssoSignIn(ssoToken: string): Promise<SsoSigninResultType> 
 export async function signUp(payload: SignUpPayload): Promise<SignUpResultType> {
 	const response = await api.post<SignUpResultType>("/auth/signup", payload);
 	return response.data;
+}
+
+export async function getRoles(ssoToken: string): Promise<Role[]> {
+	const response = await api.get<unknown>("/auth/roles", {
+		headers: { Authorization: `Bearer ${ssoToken}` },
+	});
+	const result = rolesResultSchema.safeParse(response.data);
+	if (response.status !== 200 || !result.success) {
+		throw new Error("Unable to load roles");
+	}
+	return result.data.roles;
 }

@@ -4,12 +4,13 @@ import {
 	type SsoSigninResultType,
 } from "../../../../sharedFiles/auth/authResponses";
 import { usersModel } from "../../models/user";
+import { rolesModel } from "../../models/role";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "../../../../sharedFiles/auth/authConsts";
-import { UserApprovalStatus } from "../../../../sharedFiles/auth/authTypes";
+import { UserApprovalStatus, type Role } from "../../../../sharedFiles/auth/authTypes";
 
-import { signUpPayloadSchema, ssoClaimsSchema } from "../validation/authSchemas";
+import { roleIdSchema, signUpPayloadSchema, ssoClaimsSchema } from "../validation/authSchemas";
 import { toAuthUser } from "../validation/toAuthUser";
 
 function verifySsoToken(token: string): unknown {
@@ -24,6 +25,26 @@ function getRequiredEnv(name: string): string | null {
 	const value = process.env[name];
 	return value && value.trim() !== "" ? value : null;
 }
+
+export const rolesEndpoint = async (
+	req: Request,
+	res: Response<{ roles: Role[] } | { error: string }>
+): Promise<void> => {
+	const authHeader = req.headers.authorization;
+	const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : "";
+	if (!ssoClaimsSchema.safeParse(verifySsoToken(token)).success) {
+		res.status(401).json({ error: "Invalid SSO token" });
+		return;
+	}
+	const roles = await rolesModel.find().sort({ name: 1 }).lean();
+	res.json({
+		roles: roles.map(role => ({
+			_id: roleIdSchema.parse(role._id.toHexString()),
+			key: role.key,
+			name: role.name,
+		})),
+	});
+};
 
 export const ssoSigninEndpoint = async (req: Request, res: Response<SsoSigninResultType>): Promise<void> => {
 	const authHeader = req.headers.authorization;
@@ -132,10 +153,16 @@ export async function signUpEndpoint(req: Request<unknown, unknown, unknown>, re
 			return;
 		}
 
+		if (!(await rolesModel.exists({ _id: user.role }))) {
+			res.status(400).json({ success: false, error: "תפקיד לא תקין" });
+			return;
+		}
+
 		const createdUser = new usersModel({
 			personalNumber: pn,
 			firstName: user.firstName,
 			lastName: user.lastName,
+			role: user.role,
 			mador: user.mador,
 			meshek_description: user.meshek_description,
 		});
