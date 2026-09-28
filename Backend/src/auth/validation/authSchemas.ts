@@ -1,12 +1,12 @@
 import { z } from "zod";
-import type { PersonalNumber, RoleID } from "../../../../sharedFiles/auth/authTypes";
-import { PERSONAL_NUMBER_PATTERN, ROLE_ID_PATTERN } from "../../../../sharedFiles/auth/authConsts";
+import type { PersonalNumber } from "../../../../sharedFiles/auth/authTypes";
+import { PERSONAL_NUMBER_PATTERN } from "../../../../sharedFiles/auth/authConsts";
 
 // Apply the shared brands only after runtime validation succeeds.
-export const personalNumberSchema = z.string().regex(PERSONAL_NUMBER_PATTERN)
+export const personalNumberSchema = z
+	.string()
+	.regex(PERSONAL_NUMBER_PATTERN)
 	.transform(value => value as PersonalNumber);
-
-export const roleIdSchema = z.string().regex(ROLE_ID_PATTERN).transform(value => value.toLowerCase() as RoleID);
 
 export const ssoClaimsSchema = z.object({
 	fname: z.string().optional(),
@@ -24,7 +24,6 @@ export const signUpPayloadSchema = z.object({
 	user: z.object({
 		firstName: z.string().trim().min(2).max(32),
 		lastName: z.string().trim().min(2).max(32),
-		role: roleIdSchema,
 		mador: z.string().trim().min(1),
 		meshek_description: z.string().optional(),
 	}),

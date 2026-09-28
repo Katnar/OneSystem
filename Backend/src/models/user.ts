@@ -1,5 +1,4 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
-import { rolesModel } from "./role";
 
 export const UserSchema = new Schema(
 	{
@@ -9,9 +8,8 @@ export const UserSchema = new Schema(
 			required: true,
 			unique: true,
 		},
-		firstName: { type: String, minlength: 2,maxLength: 32, required: true },
+		firstName: { type: String, minlength: 2, maxLength: 32, required: true },
 		lastName: { type: String, minlength: 2, maxLength: 32, required: true },
-		role: { type: Schema.Types.ObjectId, ref: rolesModel.modelName, required: true },
 		mador: { type: String, required: true },
 		meshek_description: { type: String },
 		approvalStatus: { type: Boolean, default: false },
