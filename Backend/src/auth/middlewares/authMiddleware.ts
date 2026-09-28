@@ -32,20 +32,21 @@ export const authenticate = async (
 		return res.status(500).json({ ok: false, error: { status: AuthResponseStatus.ServerError } });
 	}
 
+	let decoded: ReturnType<typeof appJwtClaimsSchema.parse>;
 	try {
-		const decoded = appJwtClaimsSchema.parse(jwt.verify(token, secret));
-
-		const user = await usersModel.findById(decoded.id);
-
-		if (!user || user.approvalStatus !== UserApprovalStatus.APPROVED) {
-			return res.status(401).json({ ok: false, error: { status: AuthResponseStatus.NotApproved } });
-		}
-
-		res.locals.user = toAuthUser(user.toObject());
-		return next();
+		decoded = appJwtClaimsSchema.parse(jwt.verify(token, secret));
 	} catch (err) {
 		const status =
 			err instanceof jwt.TokenExpiredError ? AuthResponseStatus.ExpiredToken : AuthResponseStatus.BadToken;
 		return res.status(401).json({ ok: false, error: { status } });
 	}
+
+	const user = await usersModel.findById(decoded.id);
+
+	if (!user || user.approvalStatus !== UserApprovalStatus.APPROVED) {
+		return res.status(401).json({ ok: false, error: { status: AuthResponseStatus.NotApproved } });
+	}
+
+	res.locals.user = toAuthUser(user.toObject());
+	return next();
 };
