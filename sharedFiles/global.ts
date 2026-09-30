@@ -9,7 +9,23 @@ export type BrandedString<UniqueTypeId extends NonEmptyString> = AssertOnly<stri
 
 export type BrandedNumber<UniqueTypeId extends NonEmptyString> = AssertOnly<number, UniqueTypeId>;
 
-export type Year = BrandedNumber<"year"> 
+export type Year = BrandedNumber<"year">; 
+
+export type DateString = BrandedString<"date string">;
+
+// NOTE: in general it is not a great idea to store money in floating points but JS is a stupid language that make it hard to avoid using floating points so... 
+export type MoneyILS = BrandedNumber<"israeli shekel">;
+
+type AsObjectSent<T> = {
+  [K in keyof T]: AsSent<T[K]>
+};
+
+// Automatically turns dates to DateStrings accounting for Date | null and whatnot 
+export type AsSent<T> = T extends Date 
+  ? DateString 
+  : T extends object 
+  ? AsObjectSent<T> 
+  : T;
 
 
 export type PhoneNumber = BrandedString<"phone number">
