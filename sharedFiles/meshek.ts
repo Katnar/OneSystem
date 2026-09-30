@@ -9,7 +9,7 @@ export type MeshekBaseFields = {
 }
 
 export type Meshek = { _id: MeshekID } & MeshekBaseFields
-// GET {api}/meshek
-export type GetMesheksResponse = Result<
-    {mesheks: SomeOrDefault<NonEmptyArray<Meshek>, "נראה שאין שווקים זמינים במערכת">}, NonEmptyString
+// GET {api}/{meshekMador}/meshek
+export type GetMesheksResponse<M extends MeshekMador> = Result<
+    {mesheks: SomeOrDefault<NonEmptyArray<Meshek & {mador: M}>, "נראה שאין שווקים זמינים במערכת">}, NonEmptyString
 > 
