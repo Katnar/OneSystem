@@ -1,7 +1,6 @@
-import { BrandedString, Mador, NonEmptyArray, NonEmptyString, Result, SomeOrDefault } from "./global"
+import { BrandedString, NonEmptyArray, NonEmptyString, Result, SomeOrDefault } from "./global"
+import { MeshekMador } from "./mador"
 
-export const {BUDGETS: Budget, ...MeshekMador} = Mador; 
-export type MeshekMador = typeof MeshekMador[keyof typeof MeshekMador]
 export type MeshekID = BrandedString<"meshek id">
 
 export type MeshekBaseFields = {
