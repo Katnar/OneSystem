@@ -11,6 +11,19 @@ export type BrandedNumber<UniqueTypeId extends NonEmptyString> = AssertOnly<numb
 
 export type Year = BrandedNumber<"year"> 
 
+export type DateString = BrandedString<"date string">;
+
+type AsObjectSent<T> = {
+  [K in keyof T]: AsSent<T[K]>
+};
+
+// Automatically turns dates to DateStrings accounting for Date | null and whatnot 
+export type AsSent<T> = T extends Date 
+  ? DateString 
+  : T extends object 
+  ? AsObjectSent<T> 
+  : T;
+
 
 export type PhoneNumber = BrandedString<"phone number">
 
