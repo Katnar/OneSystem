@@ -1,5 +1,8 @@
 import { BrandedString, NonEmptyArray, NonEmptyString, PhoneNumber, Result, SomeOrDefault } from "./global"
 
+// ----------------------------------------- BASIC TYPES ----------------------------------------------------------
+
+
 export const SupplyArea = {
     CENTER: "מרכז", 
     SOUTH: "דרום",
@@ -16,6 +19,9 @@ export type SupplierBaseFields = {
 }
 export type SupplierID = BrandedString<"supplier id">
 export type Supplier = SupplierBaseFields & { _id: SupplierID }
+
+
+// ----------------------------------------- WIRE TYPES ----------------------------------------------------------
 
 // POST {api}/supplier
 export type AddNewSupplierPayload =  {supplier: Omit<SupplierBaseFields, "areas"> & { areas: SupplyArea[] }};

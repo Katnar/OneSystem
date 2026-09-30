@@ -1,6 +1,8 @@
 import { BrandedString, NonEmptyArray, NonEmptyString, Result, SomeOrDefault } from "./global"
 import { MeshekMador } from "./mador"
 
+// ----------------------- BASIC TYPES ------------------------------------
+
 export type MeshekID = BrandedString<"meshek id">
 
 export type MeshekBaseFields = {
@@ -9,6 +11,9 @@ export type MeshekBaseFields = {
 }
 
 export type Meshek = { _id: MeshekID } & MeshekBaseFields
+
+// ---------------------- WIRE TYPES --------------------------------------
+
 // GET {api}/{meshekMador}/meshek
 export type GetMesheksResponse<M extends MeshekMador> = Result<
     {mesheks: SomeOrDefault<NonEmptyArray<Meshek & {mador: M}>, "נראה שאין שווקים זמינים במערכת">}, NonEmptyString
