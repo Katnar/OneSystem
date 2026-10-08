@@ -5,7 +5,6 @@ import { AuthResponseStatus, type User, UserApprovalStatus } from "../../../shar
 import type { SsoSigninResultType } from "../../../sharedFiles/auth/authResponses";
 import { usersModel } from "../models/user";
 
-import { toAuthUser } from "./toAuthUser";
 import { env } from "../env";
 
 type AppJwtClaims = {
@@ -52,6 +51,6 @@ export const authenticate = async (
 		return res.status(401).json({ ok: false, error: { status: AuthResponseStatus.NotApproved } });
 	}
 
-	res.locals.user = toAuthUser(user.toObject());
+	res.locals.user = user.toObject() as User;
 	return next();
 };

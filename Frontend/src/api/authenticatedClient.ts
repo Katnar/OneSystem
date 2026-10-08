@@ -1,6 +1,6 @@
 import axios from "axios";
+import { buildErrorPath, ERROR_PATH, SIGN_IN_RAW_PATH } from "../../../sharedFiles/paths";
 import { clearSignInInfo, getAuthToken } from "../store/AuthStorage";
-import { buildErrorPath, ERROR_PATH, SIGN_IN_RAW_PATH } from "./paths";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 if (!API_BASE_URL && window.location.pathname !== ERROR_PATH) {

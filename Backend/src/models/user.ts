@@ -1,7 +1,20 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
-import { Mador } from "../../../sharedFiles/mador";
+import { Schema, model } from "mongoose";
+import { COLLECTION_NAMES } from "../../collectionsConsts";
+import { type UserApprovalStatus, type PersonalNumber } from "../../../sharedFiles/auth/authTypes";
+import type { NonEmptyString } from "../../../sharedFiles/global";
+import { Mador, type Mador as MadorType } from "../../../sharedFiles/mador";
 
-export const UserSchema = new Schema(
+export type UserRecord = {
+	personalNumber: PersonalNumber;
+	firstName: NonEmptyString;
+	lastName: NonEmptyString;
+	mador: MadorType;
+	meshekDescription: NonEmptyString | null;
+	approvalStatus: UserApprovalStatus;
+	signUpDate: Date;
+};
+
+export const UserSchema = new Schema<UserRecord>(
 	{
 		personalNumber: {
 			type: String,
@@ -18,13 +31,11 @@ export const UserSchema = new Schema(
 	},
 	{
 		_id: false,
-		collection: "users",
+		collection: COLLECTION_NAMES.USERS_COLLECTION_NAME,
 		timestamps: { createdAt: false, updatedAt: "last_update" } as const,
 	}
 );
 
-export type UserRecord = InferSchemaType<typeof UserSchema>;
-
-export const usersModel = model("User", UserSchema);
+export const usersModel = model<UserRecord>("User", UserSchema);
 
 export default usersModel;
