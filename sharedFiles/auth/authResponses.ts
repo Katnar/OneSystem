@@ -1,11 +1,11 @@
 import type { AsSent, NonEmptyString, Result } from "../global";
-import { AuthResponseStatus, type PersonalNumber, type User } from "./authTypes";
+import { AuthResponseStatus, type JWTToken, type PersonalNumber, type User } from "./authTypes";
 
 export { AuthResponseStatus as AuthStatus } from "./authTypes";
 
 // GET {api}/auth/sso_signin
 export type SsoSigninResultType = Result<
-	{ jwt: string; user: AsSent<User> },
+	{ jwt: JWTToken; user: AsSent<User> },
 	| {
 			status: typeof AuthResponseStatus.NotFound;
 			firstName: NonEmptyString | "";
@@ -19,7 +19,7 @@ export type SsoSigninResultType = Result<
 
 // POST {api}/auth/signup
 export type SignUpResultType = Result<
-	Record<string, never>,
+	"משתמש נוצר בהצלחה",
 	| "קלט לא תקין"
 	| "מספר אישי לא תקין"
 	| "משתמש כבר קיים"

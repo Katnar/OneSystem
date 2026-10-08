@@ -13,7 +13,7 @@
 	"scripts": {
 		"prepare": "npm run hooks:install",
 		"dev": "tsx watch --env-file-if-exists=.env src/server.ts",
-		"build": "tsc -p ../sharedFiles/tsconfig.json && tsc",
+		"build": "tsc",
 		"test": "npm run build && tsc -p test/tsconfig.json && node --test test/*.test.cjs",
 		"lint": "eslint . --ext .ts --max-warnings 0",
 		"format": "prettier --write \"src/**/*.{ts,json}\"",
@@ -36,7 +36,6 @@
 		"typescript-eslint": "^8.70.1"
 	},
 	"dependencies": {
-		"@onesystem/shared-files": "file:../sharedFiles",
 		"@types/express": "^5.0.6",
 		"@types/jsonwebtoken": "^9.0.10",
 		"cors": "^2.8.6",

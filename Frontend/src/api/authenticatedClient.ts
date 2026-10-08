@@ -11,8 +11,8 @@ export const authenticatedApi = axios.create({ baseURL: API_BASE_URL });
 
 authenticatedApi.interceptors.request.use(config => {
 	const token = getAuthToken();
-	if (token) {
-		config.headers.Authorization = `Bearer ${token}`;
+	if (token.ok) {
+		config.headers.Authorization = `Bearer ${token.result}`;
 	}
 	return config;
 });

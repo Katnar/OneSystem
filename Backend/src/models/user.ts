@@ -1,5 +1,5 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
-import { Mador } from "@onesystem/shared-files/mador";
+import { Mador } from "../../../sharedFiles/mador";
 
 export const UserSchema = new Schema(
 	{
@@ -17,6 +17,7 @@ export const UserSchema = new Schema(
 		signUpDate: { type: Date, default: Date.now },
 	},
 	{
+		_id: false,
 		collection: "users",
 		timestamps: { createdAt: false, updatedAt: "last_update" } as const,
 	}

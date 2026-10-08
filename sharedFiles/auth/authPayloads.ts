@@ -1,6 +1,6 @@
-import type { User } from "./authTypes";
+import type { SSOToken, User } from "./authTypes";
 
 export type SignUpPayload = {
-	ssoToken: string;
+	ssoToken: SSOToken;
 	user: Pick<User, "firstName" | "lastName" | "mador" | "meshekDescription">;
 };

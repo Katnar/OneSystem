@@ -1,12 +1,16 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 
-import { AuthResponseStatus, type User, UserApprovalStatus } from "@onesystem/shared-files/auth/authTypes";
-import type { SsoSigninResultType } from "@onesystem/shared-files/auth/authResponses";
+import { AuthResponseStatus, type User, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
+import type { SsoSigninResultType } from "../../../sharedFiles/auth/authResponses";
 import { usersModel } from "../models/user";
 
-import { appJwtClaimsSchema } from "./authSchemas";
 import { toAuthUser } from "./toAuthUser";
+import { env } from "../env";
+
+type AppJwtClaims = {
+	personalNumber: User["personalNumber"];
+};
 
 export type Locals = {
 	user: User;
@@ -27,21 +31,22 @@ export const authenticate = async (
 		return res.status(401).json({ ok: false, error: { status: AuthResponseStatus.BadToken } });
 	}
 
-	const secret = process.env.ONESYSTEM_SECRET_KEY_JWT;
-	if (!secret) {
-		return res.status(500).json({ ok: false, error: { status: AuthResponseStatus.ServerError } });
-	}
-
-	let decoded: ReturnType<typeof appJwtClaimsSchema.parse>;
+	let decoded: AppJwtClaims;
 	try {
-		decoded = appJwtClaimsSchema.parse(jwt.verify(token, secret));
+		decoded = jwt.verify(token, env.ONESYSTEM_SECRET_KEY_JWT) as AppJwtClaims;
 	} catch (err) {
 		const status =
 			err instanceof jwt.TokenExpiredError ? AuthResponseStatus.ExpiredToken : AuthResponseStatus.BadToken;
 		return res.status(401).json({ ok: false, error: { status } });
 	}
 
-	const user = await usersModel.findById(decoded.id);
+	let user;
+	try {
+		user = await usersModel.findOne({ personalNumber: decoded.personalNumber });
+	} catch (error) {
+		console.error("Failed to authenticate user:", error);
+		return res.status(500).json({ ok: false, error: { status: AuthResponseStatus.ServerError } });
+	}
 
 	if (!user || user.approvalStatus !== UserApprovalStatus.APPROVED) {
 		return res.status(401).json({ ok: false, error: { status: AuthResponseStatus.NotApproved } });
