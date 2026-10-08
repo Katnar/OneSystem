@@ -7,11 +7,7 @@ import morgan from "morgan";
 import mongoose from "mongoose";
 import { z } from "zod";
 import { mainRouter } from "./index";
-const config = z
-	.object({
-		PORT: z.coerce.number().int().min(0).max(65535).default(3000),
-	})
-	.parse(process.env);
+import { env } from "./env";
 
 export const app = express();
 
@@ -55,23 +51,20 @@ const errorHandler: ErrorRequestHandler = (err: unknown, _req, res, next): void 
 app.use(errorHandler);
 
 export async function startServer(): Promise<Server> {
-	const mongoUrl = process.env.MONGO_URL?.trim();
-	if (!mongoUrl) {
-		throw new Error("MONGO_URL is required. Set it in Backend/.env before starting the server.");
-	}
-	if (process.env.IS_DEBUGGING_WINDOWS === "true") {
+	if (env.IS_DEBUGGING_WINDOWS) {
 		dns.setServers(["8.8.8.8", "1.1.1.1"]);
 	}
 
 	try {
-		await mongoose.connect(mongoUrl, { serverSelectionTimeoutMS: 10000 });
+		await mongoose.connect(env.MONGO_URL, { serverSelectionTimeoutMS: 10000 });
 		return await new Promise<Server>((resolve, reject) => {
-			const server = app.listen(config.PORT);
+			const server = app.listen(env.PORT);
 			server.once("error", reject);
 			server.once("listening", () => {
 				server.off("error", reject);
 				const address = server.address();
 				if (address && typeof address !== "string") {
+					//idk how to make it take the actual dns while in openshift instead of local host its not that deep tho
 					console.log(`Server listening on http://localhost:${address.port}`);
 				}
 				resolve(server);
