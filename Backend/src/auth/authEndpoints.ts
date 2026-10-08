@@ -39,7 +39,9 @@ function toOptionalNonEmptyString(value: string | undefined): NonEmptyString | "
 	return value && value.trim() !== "" ? nonEmptyStringSchema.parse(value) : "";
 }
 
-type EmptyRequestParts = Record<string, never>;
+// Express uses `{}` for route slots that are intentionally empty.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type EmptyRequestParts = {};
 
 export const ssoSigninEndpoint = async (
 	req: Request<EmptyRequestParts, SsoSigninResultType, unknown, EmptyRequestParts>,
