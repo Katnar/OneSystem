@@ -4,23 +4,30 @@ import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "../../../sharedFiles/auth/authConsts";
 import { type JWTToken, type SSOToken, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
-import type { NonEmptyString } from "../../../sharedFiles/global";
+import type { NonEmptyString, Result } from "../../../sharedFiles/global";
 import { z } from "zod";
 
-import { nonEmptyStringSchema, signUpPayloadSchema, ssoClaimsSchema } from "./authSchemas";
+import { nonEmptyStringSchema, signUpPayloadSchema, ssoClaimsSchema, ssoDataSchema } from "./authSchemas";
+import type { SSODataType } from "./authSchemas";
 import { toAuthUser, toSentAuthUser } from "./toAuthUser";
 import { env } from "../env";
 
+const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
 const SIGN_UP_SERVER_ERROR = "שגיאת שרת. נסה שוב מאוחר יותר.";
 const SIGN_UP_SUCCESS = "משתמש נוצר בהצלחה";
 
-type SsoTokenVerificationResult = { ok: true; payload: unknown } | { ok: false; status: typeof AuthStatus.BadToken };
+type SsoTokenVerificationResult = Result<SSODataType, typeof SSO_AUTHENTICATION_ERROR>;
 
 function verifySsoToken(token: SSOToken): SsoTokenVerificationResult {
 	try {
-		return { ok: true, payload: jwt.verify(token, env.SSO_DECRYPT_KEY_JWT) };
+		const parsedPayload = ssoDataSchema.safeParse(jwt.verify(token, env.SSO_DECRYPT_KEY_JWT));
+		if (!parsedPayload.success) {
+			return { ok: false, error: SSO_AUTHENTICATION_ERROR };
+		}
+
+		return { ok: true, result: parsedPayload.data };
 	} catch {
-		return { ok: false, status: AuthStatus.BadToken };
+		return { ok: false, error: SSO_AUTHENTICATION_ERROR };
 	}
 }
 
@@ -54,11 +61,11 @@ export const ssoSigninEndpoint = async (
 
 		const verifiedSsoToken = verifySsoToken(ssoToken);
 		if (!verifiedSsoToken.ok) {
-			res.status(401).json({ ok: false, error: { status: verifiedSsoToken.status } });
+			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
 			return;
 		}
 
-		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.payload);
+		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.result);
 
 		if (!claims.success) {
 			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
@@ -66,8 +73,8 @@ export const ssoSigninEndpoint = async (
 		}
 
 		const { fname, lname, pn } = claims.data;
-		const lastName = toOptionalNonEmptyString(fname);
-		const firstName = toOptionalNonEmptyString(lname);
+		const firstName = toOptionalNonEmptyString(fname);
+		const lastName = toOptionalNonEmptyString(lname);
 
 		const user = await usersModel.findOne({ personalNumber: pn }).lean();
 
@@ -129,7 +136,7 @@ export async function signUpEndpoint(
 			return;
 		}
 
-		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.payload);
+		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.result);
 		if (!claims.success) {
 			res.status(400).json({
 				ok: false,

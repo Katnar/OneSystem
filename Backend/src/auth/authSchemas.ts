@@ -5,9 +5,13 @@ import type { PersonalNumber, SSOToken } from "../../../sharedFiles/auth/authTyp
 import { PERSONAL_NUMBER_PATTERN } from "../../../sharedFiles/auth/authConsts";
 import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
 
-type SsoClaims = {
+export type SSODataType = {
 	fname?: string;
 	lname?: string;
+	pn: string;
+};
+
+type SsoClaims = Omit<SSODataType, "pn"> & {
 	pn: PersonalNumber;
 };
 
@@ -26,9 +30,13 @@ export const nonEmptyStringSchema = z
 const madorValues = Object.values(Mador) as [Mador, ...Mador[]];
 export const madorSchema = z.enum(madorValues) satisfies z.ZodType<Mador>;
 
-export const ssoClaimsSchema = z.object({
+export const ssoDataSchema = z.object({
 	fname: z.string().optional(),
 	lname: z.string().optional(),
+	pn: z.string(),
+}) satisfies z.ZodType<SSODataType>;
+
+export const ssoClaimsSchema = ssoDataSchema.extend({
 	pn: personalNumberSchema,
 }) satisfies z.ZodType<SsoClaims>;
 
