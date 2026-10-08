@@ -64,6 +64,7 @@ export async function startServer(): Promise<Server> {
 				server.off("error", reject);
 				const address = server.address();
 				if (address && typeof address !== "string") {
+					//idk how to make it take the actual dns while in openshift instead of local host its not that deep tho
 					console.log(`Server listening on http://localhost:${address.port}`);
 				}
 				resolve(server);
