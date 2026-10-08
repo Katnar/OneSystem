@@ -1,4 +1,6 @@
-import type { BrandedString } from "../global";
+import type { BrandedString, NonEmptyString } from "../global";
+import type { Mador } from "../mador";
+
 export const UserApprovalStatus = { APPROVED: true, PENDING: false } as const;
 export type UserApprovalStatus = (typeof UserApprovalStatus)[keyof typeof UserApprovalStatus];
 
@@ -15,10 +17,10 @@ export type AuthResponseStatus = (typeof AuthResponseStatus)[keyof typeof AuthRe
 export type PersonalNumber = BrandedString<"personal number">;
 export type User = {
 	personalNumber: PersonalNumber;
-	firstName: string;
-	lastName: string;
-	mador: string;
-	meshek_description?: string;
+	firstName: NonEmptyString;
+	lastName: NonEmptyString;
+	mador: Mador;
+	meshekDescription: NonEmptyString | null;
 	approvalStatus: UserApprovalStatus;
-	signIn_date: string;
+	signUpDate: Date;
 };

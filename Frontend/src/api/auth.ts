@@ -1,7 +1,6 @@
 import axios from "axios";
-import type { SsoSigninResultType, SignUpResultType } from "../../../sharedFiles/auth/authResponses";
-import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
-import { signUpResultSchema, ssoSigninResultSchema } from "./authValidation";
+import type { SsoSigninResultType, SignUpResultType } from "@onesystem/shared-files/auth/authResponses";
+import type { SignUpPayload } from "@onesystem/shared-files/auth/authPayloads";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -11,25 +10,16 @@ const api = axios.create({
 });
 
 export async function ssoSignIn(ssoToken: string): Promise<SsoSigninResultType> {
-	const response = await api.get<unknown>("/auth/sso_signin", {
+	const response = await api.get<SsoSigninResultType>("/auth/sso_signin", {
 		headers: {
 			Authorization: `Bearer ${ssoToken}`,
 		},
 	});
 
-	const result = ssoSigninResultSchema.safeParse(response.data);
-	if (!result.success) {
-		throw new Error("Unexpected SSO response");
-	}
-
-	return result.data;
+	return response.data;
 }
 
 export async function signUp(payload: SignUpPayload): Promise<SignUpResultType> {
-	const response = await api.post<unknown>("/auth/signup", payload);
-	const result = signUpResultSchema.safeParse(response.data);
-	if (!result.success) {
-		throw new Error("Unexpected signup response");
-	}
-	return result.data;
+	const response = await api.post<SignUpResultType>("/auth/signup", payload);
+	return response.data;
 }

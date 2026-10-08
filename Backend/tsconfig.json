@@ -6,7 +6,12 @@
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@onesystem/shared-files": ["../sharedFiles/index.ts"],
+      "@onesystem/shared-files/*": ["../sharedFiles/*"]
+    }
   },
   "include": ["src/**/*", "../Utilities/**/*"]
 }

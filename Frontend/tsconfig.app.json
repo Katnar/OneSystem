@@ -22,7 +22,12 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@onesystem/shared-files": ["../sharedFiles/index.ts"],
+      "@onesystem/shared-files/*": ["../sharedFiles/*"]
+    }
   },
-  "include": ["src", "../Utilities", "../Backend/src/auth/middlewares", "../Backend/src/errorHandling", "../Backend/src/auth/routes/auth.ts", "../Backend/src/index.ts"]
+  "include": ["src"]
 }

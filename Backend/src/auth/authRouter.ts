@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { signUpEndpoint, ssoSigninEndpoint } from "../controllers/authenticationController";
+import { signUpEndpoint, ssoSigninEndpoint } from "./authEndpoints";
 
 export const authRouter = Router();
 authRouter.get("/sso_signin", ssoSigninEndpoint);

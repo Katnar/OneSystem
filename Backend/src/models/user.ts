@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
+import { Mador } from "@onesystem/shared-files/mador";
 
 export const UserSchema = new Schema(
 	{
@@ -10,10 +11,10 @@ export const UserSchema = new Schema(
 		},
 		firstName: { type: String, minlength: 2, maxLength: 32, required: true },
 		lastName: { type: String, minlength: 2, maxLength: 32, required: true },
-		mador: { type: String, required: true },
-		meshek_description: { type: String },
+		mador: { type: String, enum: Object.values(Mador), required: true },
+		meshekDescription: { type: String, default: null },
 		approvalStatus: { type: Boolean, default: false },
-		signIn_date: { type: Date, default: Date.now },
+		signUpDate: { type: Date, default: Date.now },
 	},
 	{
 		collection: "users",
