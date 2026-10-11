@@ -2,8 +2,12 @@ import { z } from "zod";
 import type { NonEmptyString } from "../../../sharedFiles/global";
 import { Mador } from "../../../sharedFiles/mador";
 import type { PersonalNumber, SSOToken } from "../../../sharedFiles/auth/authTypes";
-import { PERSONAL_NUMBER_PATTERN } from "../../../sharedFiles/auth/authConsts";
 import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
+import {
+	createPersonalNumberSchema,
+	createAppJwtClaimsSchema,
+	type AppJwtClaims,
+} from "../../../sharedFiles/auth/authSchemas";
 
 export type SSODataType = {
 	fname?: string;
@@ -15,19 +19,12 @@ type SsoClaims = Omit<SSODataType, "pn"> & {
 	pn: PersonalNumber;
 };
 
-export type AppJwtClaims = {
-	personalNumber: PersonalNumber;
-};
+export const personalNumberSchema = createPersonalNumberSchema<z.ZodType<PersonalNumber>>(z);
 
-// Apply the shared brands only after runtime validation succeeds.
-export const personalNumberSchema = z
-	.string()
-	.regex(PERSONAL_NUMBER_PATTERN)
-	.transform(value => value as PersonalNumber) satisfies z.ZodType<PersonalNumber>;
-
-export const appJwtClaimsSchema = z.object({
-	personalNumber: personalNumberSchema,
-}) satisfies z.ZodType<AppJwtClaims>;
+export const appJwtClaimsSchema = createAppJwtClaimsSchema<typeof personalNumberSchema, z.ZodType<AppJwtClaims>>(
+	z,
+	personalNumberSchema
+);
 
 export const nonEmptyStringSchema = z
 	.string()

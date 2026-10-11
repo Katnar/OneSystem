@@ -6,7 +6,8 @@ import type { SsoSigninResultType } from "../../../sharedFiles/auth/authResponse
 import { usersModel } from "../models/user";
 
 import { env } from "../env";
-import { appJwtClaimsSchema, type AppJwtClaims } from "./authSchemas";
+import { appJwtClaimsSchema } from "./authSchemas";
+import type { AppJwtClaims } from "../../../sharedFiles/auth/authSchemas";
 
 export type Locals = {
 	user: User;
