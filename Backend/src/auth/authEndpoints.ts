@@ -4,10 +4,10 @@ import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "../../../sharedFiles/auth/authConsts";
 import { type JWTToken, type SSOToken, type User, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
-import type { NonEmptyString, Result } from "../../../sharedFiles/global";
+import type { Result } from "../../../sharedFiles/global";
 import { z } from "zod";
 
-import { nonEmptyStringSchema, signUpPayloadSchema, ssoClaimsSchema, ssoDataSchema } from "./authSchemas";
+import { firstNameSchema, lastNameSchema, signUpPayloadSchema, ssoClaimsSchema, ssoDataSchema } from "./authSchemas";
 import type { SSODataType } from "./authSchemas";
 import { toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
@@ -35,8 +35,13 @@ function isDuplicateKeyError(error: unknown): boolean {
 	return z.object({ code: z.literal(11000) }).safeParse(error).success;
 }
 
-function toOptionalNonEmptyString(value: string | undefined): NonEmptyString | "" {
-	return value && value.trim() !== "" ? nonEmptyStringSchema.parse(value) : "";
+function toOptionalName<Name>(value: string | undefined, schema: z.ZodType<Name>): Name | null {
+	if (!value?.trim()) {
+		return null;
+	}
+
+	const parsedName = schema.safeParse(value);
+	return parsedName.success ? parsedName.data : null;
 }
 
 // Express uses `{}` for route slots that are intentionally empty.
@@ -75,8 +80,8 @@ export const ssoSigninEndpoint = async (
 		}
 
 		const { fname, lname, pn } = claims.data;
-		const firstName = toOptionalNonEmptyString(fname);
-		const lastName = toOptionalNonEmptyString(lname);
+		const firstName = toOptionalName(fname, firstNameSchema);
+		const lastName = toOptionalName(lname, lastNameSchema);
 
 		const user = await usersModel.findOne({ personalNumber: pn }).lean();
 
