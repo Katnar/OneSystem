@@ -3,7 +3,14 @@ import { usersModel } from "../models/user";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "../../../sharedFiles/auth/authConsts";
-import { type JWTToken, type SSOToken, type User, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
+import {
+	type FirstName,
+	type JWTToken,
+	type LastName,
+	type SSOToken,
+	type User,
+	UserApprovalStatus,
+} from "../../../sharedFiles/auth/authTypes";
 import type { Result } from "../../../sharedFiles/global";
 import { z } from "zod";
 
@@ -35,12 +42,21 @@ function isDuplicateKeyError(error: unknown): boolean {
 	return z.object({ code: z.literal(11000) }).safeParse(error).success;
 }
 
-function toOptionalName<Name>(value: string | undefined, schema: z.ZodType<Name>): Name | null {
+function toNullableFirstName(value: string | undefined): FirstName | null {
 	if (!value?.trim()) {
 		return null;
 	}
 
-	const parsedName = schema.safeParse(value);
+	const parsedName = firstNameSchema.safeParse(value);
+	return parsedName.success ? parsedName.data : null;
+}
+
+function toNullableLastName(value: string | undefined): LastName | null {
+	if (!value?.trim()) {
+		return null;
+	}
+
+	const parsedName = lastNameSchema.safeParse(value);
 	return parsedName.success ? parsedName.data : null;
 }
 
@@ -80,8 +96,8 @@ export const ssoSigninEndpoint = async (
 		}
 
 		const { fname, lname, pn } = claims.data;
-		const firstName = toOptionalName(fname, firstNameSchema);
-		const lastName = toOptionalName(lname, lastNameSchema);
+		const firstName = toNullableFirstName(fname);
+		const lastName = toNullableLastName(lname);
 
 		const user = await usersModel.findOne({ personalNumber: pn }).lean();
 
