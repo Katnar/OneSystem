@@ -1,13 +1,18 @@
 import { Schema, model } from "mongoose";
 import { COLLECTION_NAMES } from "../../collectionsConsts";
-import { type UserApprovalStatus, type PersonalNumber } from "../../../sharedFiles/auth/authTypes";
+import {
+	type FirstName,
+	type LastName,
+	type UserApprovalStatus,
+	type PersonalNumber,
+} from "../../../sharedFiles/auth/authTypes";
 import type { NonEmptyString } from "../../../sharedFiles/global";
 import { Mador, type Mador as MadorType } from "../../../sharedFiles/mador";
 
 export type UserRecord = {
 	personalNumber: PersonalNumber;
-	firstName: NonEmptyString;
-	lastName: NonEmptyString;
+	firstName: FirstName;
+	lastName: LastName;
 	mador: MadorType;
 	meshekDescription: NonEmptyString | null;
 	approvalStatus: UserApprovalStatus;

@@ -1,11 +1,13 @@
 import { z } from "zod";
 import type { NonEmptyString } from "../../../sharedFiles/global";
 import { Mador } from "../../../sharedFiles/mador";
-import type { PersonalNumber, SSOToken } from "../../../sharedFiles/auth/authTypes";
+import type { FirstName, LastName, PersonalNumber, SSOToken } from "../../../sharedFiles/auth/authTypes";
 import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
 import {
 	createPersonalNumberSchema,
 	createAppJwtClaimsSchema,
+	createFirstNameSchema,
+	createLastNameSchema,
 	type AppJwtClaims,
 } from "../../../sharedFiles/auth/authSchemas";
 
@@ -25,6 +27,10 @@ export const appJwtClaimsSchema = createAppJwtClaimsSchema<typeof personalNumber
 	z,
 	personalNumberSchema
 );
+
+export const firstNameSchema = createFirstNameSchema<z.ZodType<FirstName>>(z);
+
+export const lastNameSchema = createLastNameSchema<z.ZodType<LastName>>(z);
 
 export const nonEmptyStringSchema = z
 	.string()
@@ -51,18 +57,8 @@ export const signUpPayloadSchema = z.object({
 		.refine(value => value.trim().length > 0)
 		.transform(value => value as SSOToken),
 	user: z.object({
-		firstName: z
-			.string()
-			.trim()
-			.min(2)
-			.max(32)
-			.transform(value => value as NonEmptyString),
-		lastName: z
-			.string()
-			.trim()
-			.min(2)
-			.max(32)
-			.transform(value => value as NonEmptyString),
+		firstName: firstNameSchema,
+		lastName: lastNameSchema,
 		mador: madorSchema,
 		meshekDescription: z.union([nonEmptyStringSchema, z.null()]),
 	}),
