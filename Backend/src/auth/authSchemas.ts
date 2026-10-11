@@ -15,11 +15,19 @@ type SsoClaims = Omit<SSODataType, "pn"> & {
 	pn: PersonalNumber;
 };
 
+export type AppJwtClaims = {
+	personalNumber: PersonalNumber;
+};
+
 // Apply the shared brands only after runtime validation succeeds.
 export const personalNumberSchema = z
 	.string()
 	.regex(PERSONAL_NUMBER_PATTERN)
 	.transform(value => value as PersonalNumber) satisfies z.ZodType<PersonalNumber>;
+
+export const appJwtClaimsSchema = z.object({
+	personalNumber: personalNumberSchema,
+}) satisfies z.ZodType<AppJwtClaims>;
 
 export const nonEmptyStringSchema = z
 	.string()
