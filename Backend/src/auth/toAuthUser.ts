@@ -1,5 +1,5 @@
-import type { User } from "../../../sharedFiles/auth/authTypes";
-import type { AsSent, DateString } from "../../../sharedFiles/global";
+import type { User, UserResponse } from "../../../sharedFiles/auth/authTypes";
+import type { DateString } from "../../../sharedFiles/global";
 import type { UserRecord } from "../models/user";
 
 export function toAuthUser(user: UserRecord): User {
@@ -14,7 +14,7 @@ export function toAuthUser(user: UserRecord): User {
 	};
 }
 
-export function toSentAuthUser(user: User): AsSent<User> {
+export function toAuthUserResponse(user: User): UserResponse {
 	return {
 		...user,
 		signUpDate: user.signUpDate.toISOString() as DateString,
