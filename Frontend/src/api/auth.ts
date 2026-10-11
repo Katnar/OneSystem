@@ -1,9 +1,14 @@
 import axios from "axios";
-import { AuthStatus, type SsoSigninResultType, type SignUpResultType } from "../../../sharedFiles/auth/authResponses";
-import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
-import type { SSOToken } from "../../../sharedFiles/auth/authTypes";
+import {
+	AuthStatus,
+	SignUpStatus,
+	type SsoSigninResultType,
+	type SignUpResultType,
+} from "@onesystem/shared/auth/authResponses";
+import type { SignUpPayload } from "@onesystem/shared/auth/authPayloads";
+import type { SSOToken } from "@onesystem/shared/auth/authTypes";
+import { signUpResultSchema, ssoSigninResultSchema } from "@onesystem/shared/auth/authSchemas";
 import { setAuthToken } from "../store/AuthStorage";
-import { signUpResultSchema, ssoSigninResultSchema } from "./authResponseSchemas";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -33,5 +38,5 @@ export async function ssoSignIn(ssoToken: SSOToken): Promise<SsoSigninResultType
 export async function signUp(payload: SignUpPayload): Promise<SignUpResultType> {
 	const response = await api.post<unknown>("/auth/signup", payload);
 	const parsedResult = signUpResultSchema.safeParse(response.data);
-	return parsedResult.success ? parsedResult.data : { ok: false, error: "שגיאת שרת. נסה שוב מאוחר יותר." };
+	return parsedResult.success ? parsedResult.data : { ok: false, error: { status: SignUpStatus.ServerError } };
 }
