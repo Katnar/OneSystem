@@ -4,4 +4,5 @@ export * from "./paths";
 export * from "./auth/authConsts";
 export * from "./auth/authPayloads";
 export * from "./auth/authResponses";
+export * from "./auth/authSchemas";
 export * from "./auth/authTypes";
