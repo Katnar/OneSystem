@@ -1,4 +1,4 @@
-import type { BrandedString, NonEmptyString } from "../global";
+import type { BrandedString, DateString, NonEmptyString } from "../global";
 import type { Mador } from "../mador";
 
 export const UserApprovalStatus = { APPROVED: true, PENDING: false } as const;
@@ -26,4 +26,8 @@ export type User = {
 	meshekDescription: NonEmptyString | null;
 	approvalStatus: UserApprovalStatus;
 	signUpDate: Date;
+};
+
+export type UserResponse = Omit<User, "signUpDate"> & {
+	signUpDate: DateString;
 };

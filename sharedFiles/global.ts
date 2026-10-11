@@ -15,18 +15,6 @@ export type Year = BrandedNumber<"year">
 export type PhoneNumber = BrandedString<"phone number">
 export type DateString = BrandedString<"date string">
 
-type AsObjectSent<T> = {
-	[K in keyof T]: AsSent<T[K]>;
-};
-
-export type AsSent<T> = T extends Date
-	? DateString
-	: T extends string | number | boolean | null | undefined
-		? T
-		: T extends object
-			? AsObjectSent<T>
-			: T;
-
 export type Ok<T> = { ok: true; result: T };
 export type Err<D> = { ok: false; error: D };
 // this type forces you to check if ok before you can access the data, you should use this type extensively
