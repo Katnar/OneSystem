@@ -3,13 +3,13 @@ import { usersModel } from "../models/user";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "../../../sharedFiles/auth/authConsts";
-import { type JWTToken, type SSOToken, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
+import { type JWTToken, type SSOToken, type User, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
 import type { NonEmptyString, Result } from "../../../sharedFiles/global";
 import { z } from "zod";
 
 import { nonEmptyStringSchema, signUpPayloadSchema, ssoClaimsSchema, ssoDataSchema } from "./authSchemas";
 import type { SSODataType } from "./authSchemas";
-import { toAuthUser, toSentAuthUser } from "./toAuthUser";
+import { toSentAuthUser } from "./toAuthUser";
 import { env } from "../env";
 
 const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
@@ -93,7 +93,7 @@ export const ssoSigninEndpoint = async (
 			return;
 		}
 
-		const authUser = toAuthUser(user);
+		const authUser = user as User;
 
 		const tokenPayload = {
 			personalNumber: authUser.personalNumber,
