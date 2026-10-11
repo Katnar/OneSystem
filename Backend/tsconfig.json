@@ -7,7 +7,9 @@
 		"baseUrl": ".",
 		"paths": {
 			"@onesystem/shared": ["../sharedFiles"],
-			"@onesystem/shared/*": ["../sharedFiles/*"]
+			"@onesystem/shared/*": ["../sharedFiles/*"],
+			"zod": ["node_modules/zod"],
+			"zod/*": ["node_modules/zod/*"]
 		},
 		"strict": true,
 		"esModuleInterop": true,
