@@ -1,12 +1,12 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 
-import { AuthResponseStatus, type User, UserApprovalStatus } from "../../../sharedFiles/auth/authTypes";
-import type { SsoSigninResultType } from "../../../sharedFiles/auth/authResponses";
+import { AuthResponseStatus, type SsoSigninResultType } from "@onesystem/shared/auth/authResponses";
+import { type User, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
+import { appJwtClaimsSchema, type AppJwtClaims } from "./authSchemas";
 import { usersModel } from "../models/user";
 
 import { env } from "../env";
-import { appJwtClaimsSchema, type AppJwtClaims } from "./authSchemas";
 
 export type Locals = {
 	user: User;
