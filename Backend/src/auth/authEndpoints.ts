@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import { nonEmptyStringSchema, signUpPayloadSchema, ssoClaimsSchema, ssoDataSchema } from "./authSchemas";
 import type { SSODataType } from "./authSchemas";
-import { toSentAuthUser } from "./toAuthUser";
+import { toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
 
 const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
@@ -105,7 +105,7 @@ export const ssoSigninEndpoint = async (
 
 		res.json({
 			ok: true,
-			result: { jwt: appJwt, user: toSentAuthUser(authUser) },
+			result: { jwt: appJwt, user: toAuthUserResponse(authUser) },
 		});
 	} catch (error) {
 		console.error("Failed to complete SSO sign-in:", error);
