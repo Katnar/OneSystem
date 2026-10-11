@@ -17,11 +17,13 @@ export type AuthResponseStatus = (typeof AuthResponseStatus)[keyof typeof AuthRe
 export type PersonalNumber = BrandedString<"personal number">;
 export type JWTToken = BrandedString<"jwt token">;
 export type SSOToken = BrandedString<"sso token">;
+export type FirstName = BrandedString<"first name">;
+export type LastName = BrandedString<"last name">;
 
 export type User = {
 	personalNumber: PersonalNumber;
-	firstName: NonEmptyString;
-	lastName: NonEmptyString;
+	firstName: FirstName;
+	lastName: LastName;
 	mador: Mador;
 	meshekDescription: NonEmptyString | null;
 	approvalStatus: UserApprovalStatus;
