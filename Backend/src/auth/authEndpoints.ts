@@ -1,8 +1,13 @@
-import { AuthStatus, type SignUpResultType, type SsoSigninResultType } from "../../../sharedFiles/auth/authResponses";
+import {
+	AuthStatus,
+	SignUpStatus,
+	type SignUpResultType,
+	type SsoSigninResultType,
+} from "@onesystem/shared/auth/authResponses";
 import { usersModel } from "../models/user";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
-import { JWT_LIFETIME_HOURS } from "../../../sharedFiles/auth/authConsts";
+import { JWT_LIFETIME_HOURS } from "@onesystem/shared/auth/authConsts";
 import {
 	type FirstName,
 	type JWTToken,
@@ -10,18 +15,22 @@ import {
 	type SSOToken,
 	type User,
 	UserApprovalStatus,
-} from "../../../sharedFiles/auth/authTypes";
-import type { Result } from "../../../sharedFiles/global";
+} from "@onesystem/shared/auth/authTypes";
+import type { Result } from "@onesystem/shared/global";
 import { z } from "zod";
 
-import { firstNameSchema, lastNameSchema, signUpPayloadSchema, ssoClaimsSchema, ssoDataSchema } from "./authSchemas";
-import type { SSODataType } from "./authSchemas";
+import {
+	firstNameSchema,
+	lastNameSchema,
+	signUpPayloadSchema,
+	ssoClaimsSchema,
+	ssoDataSchema,
+	type SSODataType,
+} from "@onesystem/shared/auth/authSchemas";
 import { toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
 
 const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
-const SIGN_UP_SERVER_ERROR = "שגיאת שרת. נסה שוב מאוחר יותר.";
-const SIGN_UP_SUCCESS = "משתמש נוצר בהצלחה";
 
 type SsoTokenVerificationResult = Result<SSODataType, typeof SSO_AUTHENTICATION_ERROR>;
 
@@ -143,7 +152,7 @@ export async function signUpEndpoint(
 		if (!parsedPayload.success) {
 			res.status(400).json({
 				ok: false,
-				error: "קלט לא תקין",
+				error: { status: SignUpStatus.InvalidInput },
 			});
 			return;
 		}
@@ -154,7 +163,7 @@ export async function signUpEndpoint(
 		if (!verifiedSsoToken.ok) {
 			res.status(400).json({
 				ok: false,
-				error: "קלט לא תקין",
+				error: { status: SignUpStatus.InvalidInput },
 			});
 			return;
 		}
@@ -163,7 +172,7 @@ export async function signUpEndpoint(
 		if (!claims.success) {
 			res.status(400).json({
 				ok: false,
-				error: "מספר אישי לא תקין",
+				error: { status: SignUpStatus.InvalidPersonalNumber },
 			});
 			return;
 		}
@@ -173,8 +182,12 @@ export async function signUpEndpoint(
 		if (existing) {
 			res.status(400).json({
 				ok: false,
-				error:
-					existing.approvalStatus === UserApprovalStatus.APPROVED ? "משתמש כבר קיים" : "משתמש ממתין לאישור",
+				error: {
+					status:
+						existing.approvalStatus === UserApprovalStatus.APPROVED
+							? SignUpStatus.AlreadyExists
+							: SignUpStatus.PendingApproval,
+				},
 			});
 			return;
 		}
@@ -197,17 +210,19 @@ export async function signUpEndpoint(
 			const duplicateUser = await usersModel.findOne({ personalNumber: pn });
 			res.status(400).json({
 				ok: false,
-				error:
-					duplicateUser?.approvalStatus === UserApprovalStatus.PENDING
-						? "משתמש ממתין לאישור"
-						: "משתמש כבר קיים",
+				error: {
+					status:
+						duplicateUser?.approvalStatus === UserApprovalStatus.PENDING
+							? SignUpStatus.PendingApproval
+							: SignUpStatus.AlreadyExists,
+				},
 			});
 			return;
 		}
 
-		res.json({ ok: true, result: SIGN_UP_SUCCESS });
+		res.json({ ok: true, result: { status: SignUpStatus.Created } });
 	} catch (error) {
 		console.error("Failed to complete signup:", error);
-		res.status(500).json({ ok: false, error: SIGN_UP_SERVER_ERROR });
+		res.status(500).json({ ok: false, error: { status: SignUpStatus.ServerError } });
 	}
 }
