@@ -6,10 +6,7 @@ import type { SsoSigninResultType } from "../../../sharedFiles/auth/authResponse
 import { usersModel } from "../models/user";
 
 import { env } from "../env";
-
-type AppJwtClaims = {
-	personalNumber: User["personalNumber"];
-};
+import { appJwtClaimsSchema, type AppJwtClaims } from "./authSchemas";
 
 export type Locals = {
 	user: User;
@@ -32,7 +29,12 @@ export const authenticate = async (
 
 	let decoded: AppJwtClaims;
 	try {
-		decoded = jwt.verify(token, env.ONESYSTEM_SECRET_KEY_JWT) as AppJwtClaims;
+		const parsedPayload = appJwtClaimsSchema.safeParse(jwt.verify(token, env.ONESYSTEM_SECRET_KEY_JWT));
+		if (!parsedPayload.success) {
+			return res.status(401).json({ ok: false, error: { status: AuthResponseStatus.BadToken } });
+		}
+
+		decoded = parsedPayload.data;
 	} catch (err) {
 		const status =
 			err instanceof jwt.TokenExpiredError ? AuthResponseStatus.ExpiredToken : AuthResponseStatus.BadToken;
