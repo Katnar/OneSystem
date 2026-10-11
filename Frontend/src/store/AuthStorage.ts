@@ -1,5 +1,5 @@
-import type { JWTToken } from "../../../sharedFiles/auth/authTypes";
-import type { Result } from "../../../sharedFiles/global";
+import type { JWTToken } from "@onesystem/shared/auth/authTypes";
+import type { Result } from "@onesystem/shared/global";
 
 const AUTH_TOKEN_STORAGE_KEY = "onesystem.authToken";
 const MISSING_AUTH_TOKEN_ERROR = "יש להתחבר על מנת להמשיך";
