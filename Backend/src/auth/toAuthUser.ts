@@ -1,5 +1,6 @@
-import type { User, UserResponse } from "../../../sharedFiles/auth/authTypes";
-import type { DateString } from "../../../sharedFiles/global";
+import type { User } from "@onesystem/shared/auth/authTypes";
+import type { UserResponse } from "@onesystem/shared/auth/authResponses";
+import type { DateString } from "@onesystem/shared/global";
 import type { UserRecord } from "../models/user";
 
 export function toAuthUser(user: UserRecord): User {
