@@ -1,71 +1,165 @@
+import { z } from "zod";
+import type { DateString, NonEmptyString } from "../global";
+import { Mador } from "../mador";
 import { PERSONAL_NUMBER_PATTERN } from "./authConsts";
-import type { FirstName, LastName, PersonalNumber } from "./authTypes";
+import type { SignUpPayload } from "./authPayloads";
+import {
+	AuthResponseStatus,
+	SignUpResponseStatus,
+	type SignUpErrorResponse,
+	type SignUpResultType,
+	type SignUpSuccessResponse,
+	type SsoSigninResultType,
+	type UserResponse,
+} from "./authResponses";
+import type { FirstName, JWTToken, LastName, PersonalNumber, SSOToken } from "./authTypes";
 
 export type AppJwtClaims = {
 	personalNumber: PersonalNumber;
 };
 
-type PersonalNumberSchemaTools<PersonalNumberSchema> = {
-	string(): {
-		regex(pattern: RegExp): {
-			transform(mapper: (value: string) => PersonalNumber): PersonalNumberSchema;
-		};
-	};
+export type SSODataType = {
+	fname?: string;
+	lname?: string;
+	pn: string;
 };
 
-type AppJwtClaimsSchemaTools<PersonalNumberSchema, AppJwtClaimsSchema> = {
-	object(shape: { personalNumber: PersonalNumberSchema }): AppJwtClaimsSchema;
+export type SsoClaims = Omit<SSODataType, "pn"> & {
+	pn: PersonalNumber;
 };
 
-type NameSchemaTools<NameSchema, Name> = {
-	string(): {
-		trim(): {
-			min(length: number): {
-				max(length: number): {
-					transform(mapper: (value: string) => Name): NameSchema;
-				};
-			};
-		};
-	};
-};
+export const personalNumberSchema = z
+	.string()
+	.regex(PERSONAL_NUMBER_PATTERN)
+	.transform(value => value as PersonalNumber) satisfies z.ZodType<PersonalNumber>;
 
-// Apply shared brands only after runtime validation succeeds.
-export function createPersonalNumberSchema<PersonalNumberSchema>(
-	zod: PersonalNumberSchemaTools<PersonalNumberSchema>
-): PersonalNumberSchema {
-	return zod
-		.string()
-		.regex(PERSONAL_NUMBER_PATTERN)
-		.transform(value => value as PersonalNumber);
-}
+export const jwtTokenSchema = z
+	.string()
+	.min(1)
+	.transform(value => value as JWTToken) satisfies z.ZodType<JWTToken>;
 
-export function createAppJwtClaimsSchema<PersonalNumberSchema, AppJwtClaimsSchema>(
-	zod: AppJwtClaimsSchemaTools<PersonalNumberSchema, AppJwtClaimsSchema>,
-	personalNumberSchema: PersonalNumberSchema
-): AppJwtClaimsSchema {
-	return zod.object({
-		personalNumber: personalNumberSchema,
-	});
-}
+export const ssoTokenSchema = z
+	.string()
+	.refine(value => value.trim().length > 0)
+	.transform(value => value as SSOToken) satisfies z.ZodType<SSOToken>;
 
-export function createFirstNameSchema<FirstNameSchema>(
-	zod: NameSchemaTools<FirstNameSchema, FirstName>
-): FirstNameSchema {
-	return zod
-		.string()
-		.trim()
-		.min(2)
-		.max(32)
-		.transform(value => value as FirstName);
-}
+export const firstNameSchema = z
+	.string()
+	.trim()
+	.min(2)
+	.max(32)
+	.transform(value => value as FirstName) satisfies z.ZodType<FirstName>;
 
-export function createLastNameSchema<LastNameSchema>(
-	zod: NameSchemaTools<LastNameSchema, LastName>
-): LastNameSchema {
-	return zod
-		.string()
-		.trim()
-		.min(2)
-		.max(32)
-		.transform(value => value as LastName);
-}
+export const lastNameSchema = z
+	.string()
+	.trim()
+	.min(2)
+	.max(32)
+	.transform(value => value as LastName) satisfies z.ZodType<LastName>;
+
+export const nonEmptyStringSchema = z
+	.string()
+	.trim()
+	.min(1)
+	.transform(value => value as NonEmptyString) satisfies z.ZodType<NonEmptyString>;
+
+export const dateStringSchema = z
+	.string()
+	.refine(value => {
+		const date = new Date(value);
+		return !Number.isNaN(date.getTime()) && date.toISOString() === value;
+	})
+	.transform(value => value as DateString) satisfies z.ZodType<DateString>;
+
+const madorValues = Object.values(Mador) as [Mador, ...Mador[]];
+export const madorSchema = z.enum(madorValues) satisfies z.ZodType<Mador>;
+
+export const appJwtClaimsSchema = z.object({
+	personalNumber: personalNumberSchema,
+}) satisfies z.ZodType<AppJwtClaims>;
+
+export const ssoDataSchema = z.object({
+	fname: z.string().optional(),
+	lname: z.string().optional(),
+	pn: z.string(),
+}) satisfies z.ZodType<SSODataType>;
+
+export const ssoClaimsSchema = ssoDataSchema.extend({
+	pn: personalNumberSchema,
+}) satisfies z.ZodType<SsoClaims>;
+
+export const signUpPayloadSchema = z.object({
+	ssoToken: ssoTokenSchema,
+	user: z.object({
+		firstName: firstNameSchema,
+		lastName: lastNameSchema,
+		mador: madorSchema,
+		meshekDescription: z.union([nonEmptyStringSchema, z.null()]),
+	}),
+}) satisfies z.ZodType<SignUpPayload>;
+
+export const userResponseSchema = z.object({
+	personalNumber: personalNumberSchema,
+	firstName: firstNameSchema,
+	lastName: lastNameSchema,
+	mador: madorSchema,
+	meshekDescription: z.union([nonEmptyStringSchema, z.null()]),
+	approvalStatus: z.boolean(),
+	signUpDate: dateStringSchema,
+}) satisfies z.ZodType<UserResponse>;
+
+const authErrorStatusSchema = z.enum([
+	AuthResponseStatus.BadToken,
+	AuthResponseStatus.ExpiredToken,
+	AuthResponseStatus.NotApproved,
+	AuthResponseStatus.ServerError,
+]);
+
+export const ssoSigninResultSchema = z.discriminatedUnion("ok", [
+	z.object({
+		ok: z.literal(true),
+		result: z.object({
+			jwt: jwtTokenSchema,
+			user: userResponseSchema,
+		}),
+	}),
+	z.object({
+		ok: z.literal(false),
+		error: z.discriminatedUnion("status", [
+			z.object({
+				status: z.literal(AuthResponseStatus.NotFound),
+				firstName: z.union([firstNameSchema, z.null()]),
+				lastName: z.union([lastNameSchema, z.null()]),
+				personalNumber: personalNumberSchema,
+			}),
+			z.object({
+				status: authErrorStatusSchema,
+			}),
+		]),
+	}),
+]) satisfies z.ZodType<SsoSigninResultType>;
+
+export const signUpSuccessResponseSchema = z.object({
+	status: z.literal(SignUpResponseStatus.Created),
+}) satisfies z.ZodType<SignUpSuccessResponse>;
+
+export const signUpErrorResponseSchema = z.object({
+	status: z.enum([
+		SignUpResponseStatus.InvalidInput,
+		SignUpResponseStatus.InvalidPersonalNumber,
+		SignUpResponseStatus.AlreadyExists,
+		SignUpResponseStatus.PendingApproval,
+		SignUpResponseStatus.ServerError,
+	]),
+}) satisfies z.ZodType<SignUpErrorResponse>;
+
+export const signUpResultSchema = z.discriminatedUnion("ok", [
+	z.object({
+		ok: z.literal(true),
+		result: signUpSuccessResponseSchema,
+	}),
+	z.object({
+		ok: z.literal(false),
+		error: signUpErrorResponseSchema,
+	}),
+]) satisfies z.ZodType<SignUpResultType>;

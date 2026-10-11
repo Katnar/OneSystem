@@ -5,9 +5,9 @@ import {
 	type LastName,
 	type UserApprovalStatus,
 	type PersonalNumber,
-} from "../../../sharedFiles/auth/authTypes";
-import type { NonEmptyString } from "../../../sharedFiles/global";
-import { Mador, type Mador as MadorType } from "../../../sharedFiles/mador";
+} from "@onesystem/shared/auth/authTypes";
+import type { NonEmptyString } from "@onesystem/shared/global";
+import { Mador, type Mador as MadorType } from "@onesystem/shared/mador";
 
 export type UserRecord = {
 	personalNumber: PersonalNumber;
