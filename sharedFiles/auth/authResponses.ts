@@ -1,5 +1,5 @@
-import type { NonEmptyString, Result } from "../global";
-import { AuthResponseStatus, type JWTToken, type PersonalNumber, type UserResponse } from "./authTypes";
+import type { Result } from "../global";
+import { AuthResponseStatus, type FirstName, type JWTToken, type LastName, type PersonalNumber, type UserResponse } from "./authTypes";
 
 export { AuthResponseStatus as AuthStatus } from "./authTypes";
 
@@ -8,8 +8,8 @@ export type SsoSigninResultType = Result<
 	{ jwt: JWTToken; user: UserResponse },
 	| {
 			status: typeof AuthResponseStatus.NotFound;
-			firstName: NonEmptyString | "";
-			lastName: NonEmptyString | "";
+			firstName: FirstName | null;
+			lastName: LastName | null;
 			personalNumber: PersonalNumber;
 	  }
 	| {
