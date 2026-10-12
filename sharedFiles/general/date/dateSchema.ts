@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { DateString } from "../global";
+import type { DateString } from "../../global";
 
 export const dateStringSchema = z
 	.string()

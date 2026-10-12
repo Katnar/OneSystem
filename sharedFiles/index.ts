@@ -1,5 +1,5 @@
 export * from "./global";
-export * from "./date/dateSchema";
+export * from "./general/date/dateSchema";
 export * from "./mador/mador";
 export * from "./paths";
 export * from "./auth/authConsts";
