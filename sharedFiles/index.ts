@@ -1,4 +1,5 @@
 export * from "./global";
+export * from "./general/NonEmptyString/nonEmptyString";
 export * from "./general/date/dateSchema";
 export * from "./mador/mador";
 export * from "./paths";
