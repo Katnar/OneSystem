@@ -1,6 +1,6 @@
 import { PersonalNumber } from "./auth/authTypes";
 import { FileID } from "./file";
-import { BrandedNumber, BrandedString, MoneyILS } from "./global";
+import { APIResult, AsWireType, BrandedNumber, BrandedString, MoneyILS, SomeOrDefault } from "./global";
 import { Mador } from "./mador";
 import { SupplierID } from "./supplier";
 
@@ -54,5 +54,37 @@ export type Contract = {
     SLA: FileID | null,
     mihlak: Mihlak,
     lastUpdate: Date,
-    contract: FileID
+    contract: FileID | null
 }
+
+export const ContractFileField = ["SOW", "shaaton", "pricingList", "SLA", "contract"] as const;
+export type ContractFileField = typeof ContractFileField[number];
+// --------------------------------- WIRE TYPES ----------------------------------------------------------
+// POST {api}/contracts
+export type AddNewContractPayload = AsWireType<{
+    contract: Omit<Contract, ContractFileField | "lastUpdate"> & {previousContract: SomeOrDefault<ContractNumber, null>}
+}>;
+export type AddNewContractResponse = APIResult<
+    {added: Contract, message: "ההתקשרות נוספה בהצלחה"},
+    "לא ניתן היה להוסיף את ההתקשרות. יש לנסות שוב" | "לא נמצאו מנהלי חוזה במדור שנבחר.">
+
+// POST {api}/contracts/{contractNumber}/{contractFileField}/
+export type AddFileToContractPayload = AsWireType<{}>;
+export type AddFileToContractResponse = APIResult<
+    {added: Contract, message: "הקובץ התווסף בהצלחה"},
+    "לא ניתן היה להוסיף את הקובץ. יש לנסות שוב">
+
+// PATCH {api}/contracts/{contractNumber}
+export type EditContractPayload = AsWireType<{
+    patch: Partial<Omit<Contract, ContractFileField | "lastUpdate" | "contractNumber">> & {previousContract: SomeOrDefault<ContractNumber, null>}
+}>;
+export type EditContractResponse = APIResult<
+    {edited: Contract, message: "ההתקשרות התעדכנה בהצלחה"},
+    "לא ניתן היה לעדכן את ההתקשרות. יש לנסות שוב">
+;
+// DELETE {api}/contracts/{contractNumber}
+export type DeleteContractResponse = APIResult<
+    "ההתקשרות נמחקה בהצלחה",
+    "לא ניתן למחוק את ההתקשרות משום שקיימות הזמנות המקושרות אליה והיא מוגדרת כהתקשרות קודמת של התקשרויות אחרות." |
+    "לא ניתן למחוק את ההתקשרות. יש לנסות שוב."
+>
