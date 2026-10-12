@@ -1,5 +1,5 @@
 import type { DateString, Result } from "../global";
-import type { FirstName, JWTToken, LastName, PersonalNumber, User } from "./authTypes";
+import type { Name, JWTToken, PersonalNumber, User } from "./authTypes";
 
 export const AuthResponseStatus = {
 	Ok: "ok",
@@ -45,8 +45,8 @@ export type SsoSigninResultType = Result<
 	{ jwt: JWTToken; user: UserResponse },
 	| {
 			status: typeof AuthResponseStatus.NotFound;
-			firstName: FirstName;
-			lastName: LastName;
+			firstName: Name;
+			lastName: Name;
 			personalNumber: PersonalNumber;
 	  }
 	| {
