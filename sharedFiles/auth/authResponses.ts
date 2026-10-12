@@ -45,8 +45,8 @@ export type SsoSigninResultType = Result<
 	{ jwt: JWTToken; user: UserResponse },
 	| {
 			status: typeof AuthResponseStatus.NotFound;
-			firstName: FirstName | null;
-			lastName: LastName | null;
+			firstName: FirstName;
+			lastName: LastName;
 			personalNumber: PersonalNumber;
 	  }
 	| {
