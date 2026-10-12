@@ -1,4 +1,4 @@
-import { BrandedString, NonEmptyArray, NonEmptyString, PhoneNumber, Result, SomeOrDefault } from "./global"
+import { APIResult, AsWireType, BrandedString, NonEmptyArray, NonEmptyString, PhoneNumber, SomeOrDefault } from "./global"
 
 // ----------------------------------------- BASIC TYPES ----------------------------------------------------------
 
@@ -24,8 +24,8 @@ export type Supplier = SupplierBaseFields & { _id: SupplierID }
 // ----------------------------------------- WIRE TYPES ----------------------------------------------------------
 
 // POST {api}/supplier
-export type AddNewSupplierPayload =  {supplier: Omit<SupplierBaseFields, "areas"> & { areas: SupplyArea[] }};
-export type AddNewSupplierResponse = Result<
+export type AddNewSupplierPayload =  AsWireType<{supplier: Omit<SupplierBaseFields, "areas"> & { areas: SupplyArea[] }}>;
+export type AddNewSupplierResponse = APIResult<
     {added: Supplier, message: "הספק נוסף בהצלחה"},
     "יש להזין שם ספק" | 
     "ספק בשם זה כבר קיים" |
@@ -33,10 +33,11 @@ export type AddNewSupplierResponse = Result<
 >; 
 // GET {api}/supplier
 export type GetAllSuppliersResponse = 
-    Result<{suppliers: SomeOrDefault<NonEmptyArray<Supplier>, "נראה שעוד לא נוספו ספקים למערכת">}, NonEmptyString>;
+    APIResult<{suppliers: SomeOrDefault<NonEmptyArray<Supplier>, "נראה שעוד לא נוספו ספקים למערכת">}, NonEmptyString>;
+    
 // PATCH {api}/supplier/:id
-export type EditSupplierPayload = {patch: Partial<AddNewSupplierPayload["supplier"]>};
-export type EditSupplierResponse = Result<
+export type EditSupplierPayload = AsWireType<{patch: Partial<AddNewSupplierPayload["supplier"]>}>;
+export type EditSupplierResponse = APIResult<
     {
         patched: Supplier, message: "פרטי הספק עודכנו בהצלחה"
     }, 
@@ -44,7 +45,7 @@ export type EditSupplierResponse = Result<
 >;
 
 // DELETE {api}/supplier/:id
-export type DeleteSupplierResponse = Result<
+export type DeleteSupplierResponse = APIResult<
     "הספק נמחק בהצלחה"
     , 
     "לא ניתן למחוק את הספק משום שהוא מקושר להתקשרות אחת או יותר. יש לעדכן תחילה את ההתקשרויות המקושרות" |

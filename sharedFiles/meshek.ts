@@ -1,4 +1,4 @@
-import { BrandedString, NonEmptyArray, NonEmptyString, Result, SomeOrDefault } from "./global"
+import { APIResult, BrandedString, NonEmptyArray, NonEmptyString, SomeOrDefault } from "./global"
 import { MeshekMador } from "./mador"
 
 // ----------------------- BASIC TYPES ------------------------------------
@@ -15,6 +15,6 @@ export type Meshek = { _id: MeshekID } & MeshekBaseFields
 // ---------------------- WIRE TYPES --------------------------------------
 
 // GET {api}/{meshekMador}/meshek
-export type GetMesheksResponse<M extends MeshekMador> = Result<
+export type GetMesheksResponse<M extends MeshekMador> = APIResult<
     {mesheks: SomeOrDefault<NonEmptyArray<Meshek & {mador: M}>, "נראה שאין שווקים זמינים במערכת">}, NonEmptyString
 > 

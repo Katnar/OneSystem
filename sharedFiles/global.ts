@@ -2,14 +2,30 @@ declare const brandSymbol: unique symbol;
 export type AssertOnly<T, UniqueTypeId> = T & {
 	readonly [brandSymbol]: UniqueTypeId;
 };
-// doesnt use the AssertOnly type so it will also identify any string written which isnt empty as a NonEmptyString at compile time
+// does'nt use the AssertOnly type so it will also identify any string written which is'nt empty as a NonEmptyString at compile time
 export type NonEmptyString = `${any}${string}`;
 
 export type BrandedString<UniqueTypeId extends NonEmptyString> = AssertOnly<string, UniqueTypeId>;
 
 export type BrandedNumber<UniqueTypeId extends NonEmptyString> = AssertOnly<number, UniqueTypeId>;
 
-export type Year = BrandedNumber<"year"> 
+export type Year = BrandedNumber<"year">; 
+
+export type DateString = BrandedString<"date string">;
+
+// NOTE: in general it is not a great idea to store money in floating points but JS is a stupid language that make it hard to avoid using floating points so... 
+export type MoneyILS = BrandedNumber<"israeli shekel">;
+
+type AsObjectSent<T> = {
+  [K in keyof T]: AsWireType<T[K]>
+};
+
+// Automatically turns dates to DateStrings accounting for Date | null and whatnot 
+export type AsWireType<T> = T extends Date 
+  ? DateString 
+  : T extends object 
+  ? AsObjectSent<T> 
+  : T;
 
 
 export type PhoneNumber = BrandedString<"phone number">
@@ -18,6 +34,8 @@ export type Ok<T> = { ok: true; result: T };
 export type Err<D> = { ok: false; error: D };
 // this type forces you to check if ok before you can access the data, you should use this type extensively
 export type Result<T, D> = Ok<T> | Err<D>;
+
+export type APIResult<T, D> = Result<AsWireType<T>, AsWireType<D>>;
 
 export function unwrap<T, D>(res: Result<T, D>): T {
 	if (!res.ok) {throw res.error;}
