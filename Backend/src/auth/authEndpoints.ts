@@ -8,20 +8,12 @@ import { usersModel } from "../models/user";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "@onesystem/shared/auth/authConsts";
-import {
-	type FirstName,
-	type JWTToken,
-	type LastName,
-	type SSOToken,
-	type User,
-	UserApprovalStatus,
-} from "@onesystem/shared/auth/authTypes";
+import { type JWTToken, type SSOToken, type User, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
 import type { Result } from "@onesystem/shared/global";
 import { z } from "zod";
 
 import {
-	firstNameSchema,
-	lastNameSchema,
+	NameSchema,
 	signUpPayloadSchema,
 	ssoClaimsSchema,
 	ssoDataSchema,
@@ -49,24 +41,6 @@ function verifySsoToken(token: SSOToken): SsoTokenVerificationResult {
 
 function isDuplicateKeyError(error: unknown): boolean {
 	return z.object({ code: z.literal(11000) }).safeParse(error).success;
-}
-
-function toNullableFirstName(value: string | undefined): FirstName | null {
-	if (!value?.trim()) {
-		return null;
-	}
-
-	const parsedName = firstNameSchema.safeParse(value);
-	return parsedName.success ? parsedName.data : null;
-}
-
-function toNullableLastName(value: string | undefined): LastName | null {
-	if (!value?.trim()) {
-		return null;
-	}
-
-	const parsedName = lastNameSchema.safeParse(value);
-	return parsedName.success ? parsedName.data : null;
 }
 
 // Express uses `{}` for route slots that are intentionally empty.
@@ -105,15 +79,24 @@ export const ssoSigninEndpoint = async (
 		}
 
 		const { fname, lname, pn } = claims.data;
-		const firstName = toNullableFirstName(fname);
-		const lastName = toNullableLastName(lname);
+		const firstName = NameSchema.safeParse(fname);
+		const lastName = NameSchema.safeParse(lname);
+		if (!firstName.success || !lastName.success) {
+			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
+			return;
+		}
 
 		const user = await usersModel.findOne({ personalNumber: pn }).lean();
 
 		if (!user) {
 			res.status(404).json({
 				ok: false,
-				error: { status: AuthStatus.NotFound, firstName, lastName, personalNumber: pn },
+				error: {
+					status: AuthStatus.NotFound,
+					firstName: firstName.data,
+					lastName: lastName.data,
+					personalNumber: pn,
+				},
 			});
 			return;
 		}
