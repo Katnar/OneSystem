@@ -2,7 +2,7 @@ declare const brandSymbol: unique symbol;
 export type AssertOnly<T, UniqueTypeId> = T & {
 	readonly [brandSymbol]: UniqueTypeId;
 };
-// doesnt use the AssertOnly type so it will also identify any string written which isnt empty as a NonEmptyString at compile time
+// does'nt use the AssertOnly type so it will also identify any string written which is'nt empty as a NonEmptyString at compile time
 export type NonEmptyString = `${any}${string}`;
 
 export type BrandedString<UniqueTypeId extends NonEmptyString> = AssertOnly<string, UniqueTypeId>;
@@ -34,6 +34,8 @@ export type Ok<T> = { ok: true; result: T };
 export type Err<D> = { ok: false; error: D };
 // this type forces you to check if ok before you can access the data, you should use this type extensively
 export type Result<T, D> = Ok<T> | Err<D>;
+
+export type APIResult<T, D> = Result<AsSent<T>, AsSent<D>>;
 
 export function unwrap<T, D>(res: Result<T, D>): T {
 	if (!res.ok) {throw res.error;}

@@ -1,5 +1,5 @@
 import { PersonalNumber } from "./auth/authTypes";
-import { BrandedString, NonEmptyString, Result } from "./global";
+import { APIResult, BrandedString, NonEmptyString } from "./global";
 
 
 // ---------------------- BASIC TYPES --------------------------------------
@@ -17,5 +17,5 @@ export type FileMetaData = {
 
 // ---------------------- WIRE TYPES --------------------------------------
 // GET {api}/files/{fileID}
-export type GetFileMetaDataResponse = Result<FileMetaData, NonEmptyString>
+export type GetFileMetaDataResponse = APIResult<FileMetaData, NonEmptyString>
 // GET {api}/files/{fileID}/content   --->    should return the actual file Blob

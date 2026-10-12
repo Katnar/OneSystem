@@ -1,7 +1,8 @@
 export const Mador = {
 	ENGINEERING_AND_ENERGY: 'צמ"ה ואנרגיה',
 	VEHICLE_AND_TRANSPORT: 'רכב והובלה',
-	BUDGETS: 'תקציבים'
+	BUDGETS: 'תקציבים',
+	ADMINS: "צוות פיתוח"
 } as const;
 
 export type Mador = typeof Mador[keyof typeof Mador];
