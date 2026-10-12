@@ -12,7 +12,7 @@ import {
 	type SsoSigninResultType,
 	type UserResponse,
 } from "./authResponses";
-import type { FirstName, JWTToken, LastName, PersonalNumber, SSOToken } from "./authTypes";
+import type { Name, JWTToken, PersonalNumber, SSOToken } from "./authTypes";
 
 export type AppJwtClaims = {
 	personalNumber: PersonalNumber;
@@ -43,19 +43,12 @@ export const ssoTokenSchema = z
 	.refine(value => value.trim().length > 0)
 	.transform(value => value as SSOToken) satisfies z.ZodType<SSOToken>;
 
-export const firstNameSchema = z
+export const NameSchema = z
 	.string()
 	.trim()
 	.min(2)
 	.max(32)
-	.transform(value => value as FirstName) satisfies z.ZodType<FirstName>;
-
-export const lastNameSchema = z
-	.string()
-	.trim()
-	.min(2)
-	.max(32)
-	.transform(value => value as LastName) satisfies z.ZodType<LastName>;
+	.transform(value => value as Name) satisfies z.ZodType<Name>;
 
 export const nonEmptyStringSchema = z
 	.string()
@@ -91,8 +84,8 @@ export const ssoClaimsSchema = ssoDataSchema.extend({
 export const signUpPayloadSchema = z.object({
 	ssoToken: ssoTokenSchema,
 	user: z.object({
-		firstName: firstNameSchema,
-		lastName: lastNameSchema,
+		firstName: NameSchema,
+		lastName: NameSchema,
 		mador: madorSchema,
 		meshekDescription: z.union([nonEmptyStringSchema, z.null()]),
 	}),
@@ -100,8 +93,8 @@ export const signUpPayloadSchema = z.object({
 
 export const userResponseSchema = z.object({
 	personalNumber: personalNumberSchema,
-	firstName: firstNameSchema,
-	lastName: lastNameSchema,
+	firstName: NameSchema,
+	lastName: NameSchema,
 	mador: madorSchema,
 	meshekDescription: z.union([nonEmptyStringSchema, z.null()]),
 	approvalStatus: z.boolean(),
@@ -128,8 +121,8 @@ export const ssoSigninResultSchema = z.discriminatedUnion("ok", [
 		error: z.discriminatedUnion("status", [
 			z.object({
 				status: z.literal(AuthResponseStatus.NotFound),
-				firstName: z.union([firstNameSchema, z.null()]),
-				lastName: z.union([lastNameSchema, z.null()]),
+				firstName: z.union([NameSchema, z.null()]),
+				lastName: z.union([NameSchema, z.null()]),
 				personalNumber: personalNumberSchema,
 			}),
 			z.object({
