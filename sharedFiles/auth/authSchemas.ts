@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { dateStringSchema } from "../general/Date/dateSchema";
-import type { NonEmptyString } from "../general/Strings/nonEmptyString";
+import { nonEmptyStringSchema } from "../general/Strings/nonEmptyString";
 import { Mador } from "../mador/mador";
 import { PERSONAL_NUMBER_PATTERN } from "./authConsts";
 import type { SignUpPayload } from "./authPayloads";
@@ -13,7 +13,7 @@ import {
 	type SsoSigninResultType,
 	type UserResponse,
 } from "./authResponses";
-import type { Name, JWTToken, PersonalNumber, SSOToken } from "./authTypes";
+import type { JWTToken, Name, PersonalNumber, SSOToken } from "./authTypes";
 
 export type AppJwtClaims = {
 	personalNumber: PersonalNumber;
@@ -50,12 +50,6 @@ export const NameSchema = z
 	.min(2)
 	.max(32)
 	.transform(value => value as Name) satisfies z.ZodType<Name>;
-
-export const nonEmptyStringSchema = z
-	.string()
-	.trim()
-	.min(1)
-	.transform((value: string) => value as NonEmptyString) satisfies z.ZodType<NonEmptyString>;
 
 const madorValues = Object.values(Mador) as [Mador, ...Mador[]];
 export const madorSchema = z.enum(madorValues) satisfies z.ZodType<Mador>;
