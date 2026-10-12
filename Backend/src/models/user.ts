@@ -7,7 +7,7 @@ import {
 	type PersonalNumber,
 } from "@onesystem/shared/auth/authTypes";
 import type { NonEmptyString } from "@onesystem/shared/global";
-import { Mador, type Mador as MadorType } from "@onesystem/shared/mador";
+import { Mador, type Mador as MadorType } from "@onesystem/shared/mador/mador";
 
 export type UserRecord = {
 	personalNumber: PersonalNumber;
