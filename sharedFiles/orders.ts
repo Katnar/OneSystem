@@ -1,6 +1,6 @@
 import { ContractNumber } from "./contracts";
 import { FileID } from "./file";
-import { BrandedString, MoneyILS, NonEmptyString } from "./global";
+import { APIResult, AsWireType, BrandedString, MoneyILS, NonEmptyArray, NonEmptyString, SomeOrDefault } from "./global";
 import { MeshekID } from "./meshek";
 import { SupplyArea } from "./supplier";
 
@@ -25,7 +25,6 @@ export type Order = {
     orderValueInclVat: MoneyILS,
     lastUpdate: Date,
     balance: MoneyILS,
-    balance791: MoneyILS,
     contractNumber: ContractNumber,
     previousOrder: OrderNumber | null,
     orderOutput: FileID | null,
@@ -43,5 +42,33 @@ export type Order = {
         maramAverage: MoneyILS,
     } | {
         type: typeof OrderType["TIME_AND_MATERIAL_NON_MARAM"],
+        balance791: MoneyILS,
     }
 )
+
+// ---------------------- WIRE TYPES --------------------------------------
+// GET {api}/{mador}/order/{contractNumber}
+export type GetOrdersByContractResponse<C extends ContractNumber> = APIResult<{orders: SomeOrDefault<NonEmptyArray<Order & {contract: C}>, "לא קיימות הזמנות תחת ההתקשרות">}, NonEmptyString>;
+
+// POST {api}/{mador}/order/{contractNumber}
+export type AddNewOrderPayload = AsWireType<{
+    order: Omit<Order, "lastUpdate" | "orderOutput"  | "contractNumber"> & {previousOrder: SomeOrDefault<OrderNumber, null>}
+}>;
+export type AddNewOrderResponse = APIResult<
+    {added: Order, message: "הזמנה נוספה בהצלחה"},
+    NonEmptyString
+>;
+
+// PATCH {api}/{mador}/order/{orderNumber}
+export type EditOrderPayload = AsWireType<{
+    patch: Partial<Omit<Order, "lastUpdate" | "orderOutput" | "orderNumber" | "contractNumber"> & {previousOrder: SomeOrDefault<OrderNumber, null>}>
+}>;
+export type EditOrderResponse = APIResult<
+    {edited: Order, message: "פרטי ההזמנה עודכנו בהצלחה"},
+    NonEmptyString
+>;
+// POST {api}/{mador}/order/{orderNumber}/orderOutput
+export type AddOrderOutputPayload = AsWireType<{}>;
+export type AddOrderOutputResponse = APIResult<
+    {added: Order, message: "הקובץ התווסף בהצלחה"},
+    "לא ניתן היה להוסיף את הקובץ. יש לנסות שוב">
