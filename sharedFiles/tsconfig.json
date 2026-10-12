@@ -10,7 +10,12 @@
 		"sourceMap": true,
 		"strict": true,
 		"esModuleInterop": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"zod": ["node_modules/zod", "../Backend/node_modules/zod", "../Frontend/node_modules/zod"],
+			"zod/*": ["node_modules/zod/*", "../Backend/node_modules/zod/*", "../Frontend/node_modules/zod/*"]
+		}
 	},
 	"include": ["**/*.ts"],
 	"exclude": ["dist", "node_modules"]
