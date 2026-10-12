@@ -1,4 +1,4 @@
-import { APIResult, BrandedString, NonEmptyArray, NonEmptyString, PhoneNumber, SomeOrDefault } from "./global"
+import { APIResult, AsWireType, BrandedString, NonEmptyArray, NonEmptyString, PhoneNumber, SomeOrDefault } from "./global"
 
 // ----------------------------------------- BASIC TYPES ----------------------------------------------------------
 
@@ -24,7 +24,7 @@ export type Supplier = SupplierBaseFields & { _id: SupplierID }
 // ----------------------------------------- WIRE TYPES ----------------------------------------------------------
 
 // POST {api}/supplier
-export type AddNewSupplierPayload =  {supplier: Omit<SupplierBaseFields, "areas"> & { areas: SupplyArea[] }};
+export type AddNewSupplierPayload =  AsWireType<{supplier: Omit<SupplierBaseFields, "areas"> & { areas: SupplyArea[] }}>;
 export type AddNewSupplierResponse = APIResult<
     {added: Supplier, message: "הספק נוסף בהצלחה"},
     "יש להזין שם ספק" | 
@@ -34,8 +34,9 @@ export type AddNewSupplierResponse = APIResult<
 // GET {api}/supplier
 export type GetAllSuppliersResponse = 
     APIResult<{suppliers: SomeOrDefault<NonEmptyArray<Supplier>, "נראה שעוד לא נוספו ספקים למערכת">}, NonEmptyString>;
+    
 // PATCH {api}/supplier/:id
-export type EditSupplierPayload = {patch: Partial<AddNewSupplierPayload["supplier"]>};
+export type EditSupplierPayload = AsWireType<{patch: Partial<AddNewSupplierPayload["supplier"]>}>;
 export type EditSupplierResponse = APIResult<
     {
         patched: Supplier, message: "פרטי הספק עודכנו בהצלחה"

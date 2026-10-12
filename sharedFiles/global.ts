@@ -17,11 +17,11 @@ export type DateString = BrandedString<"date string">;
 export type MoneyILS = BrandedNumber<"israeli shekel">;
 
 type AsObjectSent<T> = {
-  [K in keyof T]: AsSent<T[K]>
+  [K in keyof T]: AsWireType<T[K]>
 };
 
 // Automatically turns dates to DateStrings accounting for Date | null and whatnot 
-export type AsSent<T> = T extends Date 
+export type AsWireType<T> = T extends Date 
   ? DateString 
   : T extends object 
   ? AsObjectSent<T> 
@@ -35,7 +35,7 @@ export type Err<D> = { ok: false; error: D };
 // this type forces you to check if ok before you can access the data, you should use this type extensively
 export type Result<T, D> = Ok<T> | Err<D>;
 
-export type APIResult<T, D> = Result<AsSent<T>, AsSent<D>>;
+export type APIResult<T, D> = Result<AsWireType<T>, AsWireType<D>>;
 
 export function unwrap<T, D>(res: Result<T, D>): T {
 	if (!res.ok) {throw res.error;}
