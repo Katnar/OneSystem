@@ -121,8 +121,8 @@ export const ssoSigninResultSchema = z.discriminatedUnion("ok", [
 		error: z.discriminatedUnion("status", [
 			z.object({
 				status: z.literal(AuthResponseStatus.NotFound),
-				firstName: z.union([NameSchema, z.null()]),
-				lastName: z.union([NameSchema, z.null()]),
+				firstName: NameSchema,
+				lastName: NameSchema,
 				personalNumber: personalNumberSchema,
 			}),
 			z.object({
