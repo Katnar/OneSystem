@@ -52,4 +52,5 @@ export {
 	madorSchema,
 	personalNumberSchema,
 	roleSchema,
+	userSchema,
 } from "./auth/authSchemas";
