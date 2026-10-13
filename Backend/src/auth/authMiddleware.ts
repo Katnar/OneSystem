@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import { SSO_SIGNIN_ERROR_MESSAGES, type SsoSigninResultType } from "@onesystem/shared/auth/authResponses";
 import { type User, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
-import { appJwtClaimsSchema, type AppJwtClaims } from "./authSchemas";
+import { authenticatedUserJwtPayloadSchema, type AuthenticatedUserJwtPayload } from "./authSchemas";
 import { usersModel } from "../models/user";
 import { toAuthUser } from "./toAuthUser";
 
@@ -33,9 +33,11 @@ export const authenticate = async (
 		return res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 	}
 
-	let decoded: AppJwtClaims;
+	let decoded: AuthenticatedUserJwtPayload;
 	try {
-		const parsedPayload = appJwtClaimsSchema.safeParse(jwt.verify(token, env.ONESYSTEM_SECRET_KEY_JWT));
+		const parsedPayload = authenticatedUserJwtPayloadSchema.safeParse(
+			jwt.verify(token, env.ONESYSTEM_SECRET_KEY_JWT)
+		);
 		if (!parsedPayload.success) {
 			return res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 		}
