@@ -2,7 +2,7 @@ import { tryIntoNonEmptyArr } from "../general/Arrays/nonEmptyArray";
 import type { NonEmptyArray } from "../general/Arrays/nonEmptyArray";
 import { unwrap } from "../global";
 import { Mador } from "../mador/mador";
-import { Role, type User } from "./authTypes";
+import { Role } from "./authTypes";
 
 // this is inspired by TA's union and intersection system for filters (since permissions are glorified filters)
 
@@ -20,6 +20,11 @@ type UnionPermission = {
 type IntersectionPermission = {
 	type: "intersection";
 	permissions: NonEmptyArray<Permission>;
+};
+
+export type PermissionUser = {
+	mador: Mador;
+	role: Role;
 };
 
 export type Permission = AllowOnlyPermission | UnionPermission | IntersectionPermission;
@@ -54,7 +59,7 @@ export function intersectPermissions(permissions: NonEmptyArray<Permission>): Pe
 	};
 }
 
-export function hasPermission(permission: Permission, user: User): boolean {
+export function hasPermission(permission: Permission, user: PermissionUser): boolean {
 	switch (permission.type) {
 		case "allowOnly":
 			return permission.acceptedMadors.includes(user.mador) && permission.acceptedRoles.includes(user.role);
