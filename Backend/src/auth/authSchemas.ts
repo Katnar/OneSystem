@@ -16,7 +16,13 @@ import {
 	type SsoSigninResultType,
 	type UserResponse,
 } from "../../../sharedFiles/auth/authResponses";
-import { Role, type Name, type JWTToken, type PersonalNumber, type SSOToken } from "../../../sharedFiles/auth/authTypes";
+import {
+	Role,
+	type Name,
+	type JWTToken,
+	type PersonalNumber,
+	type SSOToken,
+} from "../../../sharedFiles/auth/authTypes";
 
 export type AppJwtClaims = {
 	personalNumber: PersonalNumber;
@@ -65,7 +71,6 @@ export const ssoDataSchema = z.object({
 	lname: z.string(),
 	pn: z.string(),
 }) satisfies z.ZodType<SSODataType>;
-
 
 export const signUpPayloadSchema = z.object({
 	ssoToken: ssoTokenSchema,
