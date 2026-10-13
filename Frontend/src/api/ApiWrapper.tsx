@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { createContext, useContext, useState } from "react";
-import { BrandedString, Result } from "../../../sharedFiles/global";
+import { Result } from "../../../sharedFiles/global";
+import { BrandedString } from "@onesystem/shared/general/Strings/brandedString";
 
 type HostUrl = BrandedString<"host url">;
 
