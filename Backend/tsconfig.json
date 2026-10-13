@@ -1,12 +1,20 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "rootDir": "..",
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*", "../Utilities/**/*"]
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "CommonJS",
+		"rootDir": "..",
+		"outDir": "./dist",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"paths": {
+			"@onesystem/shared": ["../sharedFiles"],
+			"@onesystem/shared/*": ["../sharedFiles/*"],
+			"zod": ["../sharedFiles/node_modules/zod"],
+			"zod/*": ["../sharedFiles/node_modules/zod/*"]
+		}
+	},
+	"include": ["src/**/*", "../Utilities/**/*"]
 }

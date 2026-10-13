@@ -7,6 +7,13 @@
 		"module": "ESNext",
 		"types": ["vite/client"],
 		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"@onesystem/shared": ["../sharedFiles"],
+			"@onesystem/shared/*": ["../sharedFiles/*"],
+			"zod": ["../sharedFiles/node_modules/zod"],
+			"zod/*": ["../sharedFiles/node_modules/zod/*"]
+		},
 
 		/* Bundler mode */
 		"moduleResolution": "bundler",
