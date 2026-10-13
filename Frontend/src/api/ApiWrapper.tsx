@@ -1,6 +1,6 @@
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { createContext, useContext, useState } from "react";
-import { BrandedString } from "../../../sharedFiles/global";
+import { BrandedString, Result } from "../../../sharedFiles/global";
 
 type HostUrl = BrandedString<"host url">;
 
@@ -48,82 +48,92 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 export type Resource<T> = { isLoading: true } | { isLoading: false; data: T };
 export type APIContext = {
 	get: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T>;
-	delete: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T>;
-	post: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Resource<R>;
-	patch: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Resource<R>;
+	delete: <T>(url: URL, config?: AxiosRequestConfig) => Promise<Result<T, "בקשה זהה כבר בתהליך">>;
+	post: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<Result<R, "בקשה זהה כבר בתהליך">>;
+	patch: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<Result<R, "בקשה זהה כבר בתהליך">>;
 };
 
 type DispatchKey = `${"GET" | "DELETE" | "POST" | "PATCH"} ${URL}`;
 
-const APIContext = createContext<APIContext>({
-	get: () => ({ isLoading: true }),
-	delete: () => ({ isLoading: true }),
-	post: () => ({ isLoading: true }),
-	patch: () => ({ isLoading: true }),
-});
+const APIContext = createContext<APIContext>({} as APIContext);
 
 export function APIContextProvider({ children }: { children: React.ReactNode }) {
 	const [dispatched] = useState<Set<DispatchKey>>(new Set());
 	const [cached, setCached] = useState<Map<DispatchKey, any>>(new Map());
 
-	const dispatch = async <T,>(
-		key: DispatchKey,
-		method: () => Promise<AxiosResponse<T>>,
-		cleanOld: boolean = true
-	) => {
-		if (!dispatched.has(key)) {
-			dispatched.add(key);
-			if (cleanOld) {
-				// both immediately delete the value and make sure it gets from next cache state
-				cached.delete(key);
-				setCached(prev => {
-					const newCache = new Map(prev);
-					newCache.delete(key);
-					return newCache;
-				});
-			}
-			try {
-				const response = await method();
-				setCached(prev => new Map(prev).set(key, response.data));
-			} finally {
-				dispatched.delete(key);
-			}
-		}
-	};
 	const get: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T> = <T,>(
 		url: URL,
 		config?: AxiosRequestConfig
 	) => {
 		const key: DispatchKey = `GET ${url}`;
-		dispatch(key, () => api.get<T>(url, config), false);
+		(async () => {
+			if (!dispatched.has(key)) {
+				dispatched.add(key);
+				try {
+					const response = await api.get<T>(url, config);
+					setCached(prev => new Map(prev).set(key, response.data));
+				} finally {
+					dispatched.delete(key);
+				}
+			}
+		})();
 		return cached.has(key) ? { isLoading: false, data: cached.get(key) } : { isLoading: true };
 	};
 	// delete is a reserved word
-	const deleteFunc: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T> = <T,>(
+	const deleteFunc: <T>(url: URL, config?: AxiosRequestConfig) => Promise<Result<T, "בקשה זהה כבר בתהליך">> = async <
+		T,
+	>(
 		url: URL,
 		config?: AxiosRequestConfig
 	) => {
 		const key: DispatchKey = `DELETE ${url}`;
-		dispatch(key, () => api.delete<T>(url, config));
-		return cached.has(key) ? { isLoading: false, data: cached.get(key) } : { isLoading: true };
+		if (!dispatched.has(key)) {
+			dispatched.add(key);
+			try {
+				const resp = await api.delete<T>(url, config);
+				dispatched.delete(key);
+				return { ok: true, result: resp.data };
+			} finally {
+				dispatched.delete(key);
+			}
+		}
+		return { ok: false, error: "בקשה זהה כבר בתהליך" };
 	};
-	const post: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Resource<R> = <P, R>(
+	const post: <P, R>(
 		url: URL,
 		body: P,
 		config?: AxiosRequestConfig
-	) => {
+	) => Promise<Result<R, "בקשה זהה כבר בתהליך">> = async <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => {
 		const key: DispatchKey = `POST ${url}`;
-		dispatch(key, () => api.post<R>(url, body, config));
-		return cached.has(key) ? { isLoading: false, data: cached.get(key) } : { isLoading: true };
+		if (!dispatched.has(key)) {
+			dispatched.add(key);
+			try {
+				const resp = await api.post<R>(url, body, config);
+				dispatched.delete(key);
+				return { ok: true, result: resp.data };
+			} finally {
+				dispatched.delete(key);
+			}
+		}
+		return { ok: false, error: "בקשה זהה כבר בתהליך" };
 	};
-	const patch: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Resource<R> = <P, R>(
+	const patch: <P, R>(
 		url: URL,
 		body: P,
 		config?: AxiosRequestConfig
-	) => {
+	) => Promise<Result<R, "בקשה זהה כבר בתהליך">> = async <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => {
 		const key: DispatchKey = `PATCH ${url}`;
-		dispatch(key, () => api.patch<R>(url, body, config));
-		return cached.has(key) ? { isLoading: false, data: cached.get(key) } : { isLoading: true };
+		if (!dispatched.has(key)) {
+			dispatched.add(key);
+			try {
+				const resp = await api.patch<R>(url, body, config);
+				dispatched.delete(key);
+				return { ok: true, result: resp.data };
+			} finally {
+				dispatched.delete(key);
+			}
+		}
+		return { ok: false, error: "בקשה זהה כבר בתהליך" };
 	};
 
 	return <APIContext.Provider value={{ get, delete: deleteFunc, post, patch }}>{children}</APIContext.Provider>;
