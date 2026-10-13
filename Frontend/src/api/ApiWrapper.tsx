@@ -1,12 +1,21 @@
+/* eslint-disable react-refresh/only-export-components */
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { createContext, useContext, useState } from "react";
 import { SomeOrDefault } from "../../../sharedFiles/global";
 import { BrandedString } from "@onesystem/shared/general/Strings/brandedString";
 import { unexpectedError } from "../error-handling/unexpectedError";
+import type { JWTToken } from "@onesystem/shared/auth/authTypes";
 
 type HostUrl = BrandedString<"host url">;
 
 export const API_URL = import.meta.env.VITE_API_HOST as HostUrl;
+const AUTH_TOKEN_KEY = "onesystem.authToken";
+
+export const authTokenStorage = {
+	get: () => localStorage.getItem(AUTH_TOKEN_KEY) as JWTToken | null,
+	set: (token: JWTToken) => localStorage.setItem(AUTH_TOKEN_KEY, token),
+	clear: () => localStorage.removeItem(AUTH_TOKEN_KEY),
+};
 
 // this makes it so URLS must start with `${API_URL}/`
 export type URL = `${HostUrl}/${string}`;
@@ -28,25 +37,27 @@ const api = axios.create({
 	baseURL: API_URL,
 });
 
-api.interceptors.response.use(undefined, error => {
-	const response = error.response;
-	if (response?.status === 401) {
-		clearEntireCache();
-		alert("TODO: IMPLEMENT LOGOUT ON 401");
+api.interceptors.response.use(
+	response => {
+		const token = response.data?.ok === true ? response.data.result?.jwt : undefined;
+		if (token) authTokenStorage.set(token);
+		return response;
+	},
+	error => {
+		const response = error.response;
+		if (response?.status === 401 && !error.config?.skipAuth) {
+			authTokenStorage.clear();
+			clearEntireCache();
+		}
+		// if the response is in an expected structure like Result, return the response, else throw
+		return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
 	}
-	// if the response is in an expected structure like Result, return the response, else throw
-	return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
-});
+);
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-	if (!config.skipAuth) {
-		alert("TODO: IMPLEMENT TOKEN RETRIEVAL FROM LOCAL STORAGE");
-		const token = "CHANGE ME TO THE REAL TOKEN";
-
-		if (token) {
-			config.headers = config.headers || {};
-			config.headers.Authorization = `Bearer ${token}`;
-		}
+	const token = config.skipAuth ? null : authTokenStorage.get();
+	if (token) {
+		config.headers.Authorization = `Bearer ${token}`;
 	}
 
 	return config;
@@ -67,7 +78,7 @@ const APIContext = createContext<APIContext | undefined>(undefined);
 
 export function APIContextProvider({ children }: { children: React.ReactNode }) {
 	const [dispatched] = useState<Set<DispatchKey>>(new Set());
-	const [cached, setCached] = useState<Map<DispatchKey, any>>(new Map());
+	const [cached, setCached] = useState<Map<DispatchKey, unknown>>(new Map());
 
 	clearEntireCache = () => {
 		setCached(new Map());
@@ -104,7 +115,7 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 				return new Map(prev).set(key, response.data);
 			});
 		});
-		return cached.has(key) ? { isLoading: false, data: cached.get(key) } : { isLoading: true };
+		return cached.has(key) ? { isLoading: false, data: cached.get(key) as T } : { isLoading: true };
 	};
 	// delete is a reserved word
 	const deleteFunc: <T>(url: URL, config?: AxiosRequestConfig) => Promise<NonClashingResult<T>> = async <T,>(
