@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { nonEmptyStringSchema } from "../general/Strings/nonEmptyString";
 import { Mador } from "../mador/mador";
 import { PERSONAL_NUMBER_PATTERN } from "./authConsts";
-import { Role, type FirstName, type JWTToken, type LastName, type PersonalNumber } from "./authTypes";
+import { Role, type FirstName, type JWTToken, type LastName, type PersonalNumber, type User } from "./authTypes";
 
 export const personalNumberSchema = z
 	.string()
@@ -15,7 +16,6 @@ export const jwtTokenSchema = z
 
 const baseNameSchema = z.string().trim().min(2).max(32);
 
-
 export const firstNameSchema = baseNameSchema.transform(value => value as FirstName) satisfies z.ZodType<FirstName>;
 
 export const lastNameSchema = baseNameSchema.transform(value => value as LastName) satisfies z.ZodType<LastName>;
@@ -25,3 +25,14 @@ export const madorSchema = z.enum(madorValues) satisfies z.ZodType<Mador>;
 
 const roleValues = Object.values(Role) as [Role, ...Role[]];
 export const roleSchema = z.enum(roleValues) satisfies z.ZodType<Role>;
+
+export const userSchema = z.object({
+	personalNumber: personalNumberSchema,
+	firstName: firstNameSchema,
+	lastName: lastNameSchema,
+	mador: madorSchema,
+	meshekDescription: nonEmptyStringSchema.nullable(),
+	approvalStatus: z.boolean(),
+	signUpDate: z.date(),
+	role: roleSchema,
+}) satisfies z.ZodType<User>;
