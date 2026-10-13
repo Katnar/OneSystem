@@ -1,5 +1,6 @@
 import axios from "axios";
-import { buildErrorPath, ERROR_PATH, SIGN_IN_RAW_PATH } from "@onesystem/shared/paths";
+import { buildErrorPath, ERROR_PATH } from "@onesystem/shared/paths";
+import { SIGN_IN_RAW_PATH } from "../paths";
 import { clearSignInInfo, getAuthToken } from "../store/AuthStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
