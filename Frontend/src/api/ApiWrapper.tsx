@@ -1,9 +1,12 @@
+/* eslint-disable react-refresh/only-export-components */
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { createContext, useContext, useState } from "react";
 import { SomeOrDefault } from "../../../sharedFiles/global";
 import { BrandedString } from "@onesystem/shared/general/Strings/brandedString";
 import { unexpectedError } from "../error-handling/unexpectedError";
-import type { JWTToken } from "@onesystem/shared/auth/authTypes";
+import type { SignUpPayload } from "@onesystem/shared/auth/authPayloads";
+import type { SignUpResultType, SsoSigninResultType } from "@onesystem/shared/auth/authResponses";
+import type { JWTToken, SSOToken } from "@onesystem/shared/auth/authTypes";
 
 type HostUrl = BrandedString<"host url">;
 
@@ -36,22 +39,15 @@ const api = axios.create({
 	baseURL: API_URL,
 });
 
-api.interceptors.response.use(
-	response => {
-		const token = response.data?.ok === true ? response.data.result?.jwt : undefined;
-		if (token) authTokenStorage.set(token);
-		return response;
-	},
-	error => {
-		const response = error.response;
-		if (response?.status === 401 && !error.config?.skipAuth) {
-			authTokenStorage.clear();
-			clearEntireCache();
-		}
-		// if the response is in an expected structure like Result, return the response, else throw
-		return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
+api.interceptors.response.use(undefined, error => {
+	const response = error.response;
+	if (response?.status === 401 && !error.config?.skipAuth) {
+		authTokenStorage.clear();
+		clearEntireCache();
 	}
-);
+	// if the response is in an expected structure like Result, return the response, else throw
+	return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
+});
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 	const token = config.skipAuth ? null : authTokenStorage.get();
@@ -64,7 +60,28 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 export type Resource<T> = { isLoading: true } | { isLoading: false; data: T };
 export type NonClashingResult<T> = SomeOrDefault<T, "בקשה זהה כבר בתהליך">;
+type AuthEndpoints = {
+	ssoSignin: (ssoToken: SSOToken) => Promise<SsoSigninResultType>;
+	signUp: (body: SignUpPayload) => Promise<SignUpResultType>;
+};
+
+const authEndpoints: AuthEndpoints = {
+	ssoSignin: async ssoToken => {
+		const { data } = await api.get<SsoSigninResultType>(`${API_URL}/auth/sso_signin`, {
+			skipAuth: true,
+			headers: { Authorization: `Bearer ${ssoToken}` },
+		});
+		if (data.ok) authTokenStorage.set(data.result.jwt);
+		return data;
+	},
+	signUp: async body => {
+		const { data } = await api.post<SignUpResultType>(`${API_URL}/auth/signup`, body, { skipAuth: true });
+		return data;
+	},
+};
+
 export type APIContext = {
+	auth: AuthEndpoints;
 	get: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T>;
 	delete: <T>(url: URL, config?: AxiosRequestConfig) => Promise<NonClashingResult<T>>;
 	post: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<NonClashingResult<R>>;
@@ -167,7 +184,11 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		return { some: false, value: "בקשה זהה כבר בתהליך" };
 	};
 
-	return <APIContext.Provider value={{ get, delete: deleteFunc, post, patch }}>{children}</APIContext.Provider>;
+	return (
+		<APIContext.Provider value={{ auth: authEndpoints, get, delete: deleteFunc, post, patch }}>
+			{children}
+		</APIContext.Provider>
+	);
 }
 
 export function useAPI() {
