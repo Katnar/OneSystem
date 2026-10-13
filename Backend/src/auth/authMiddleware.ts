@@ -5,8 +5,6 @@ import { SSO_SIGNIN_ERROR_MESSAGES, type SsoSigninResultType } from "@onesystem/
 import { type User, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
 import { authenticatedUserJwtPayloadSchema, type AuthenticatedUserJwtPayload } from "./authSchemas";
 import { usersModel } from "../models/user";
-import { toAuthUser } from "./toAuthUser";
-
 import { env } from "../env";
 
 const SSO_BAD_TOKEN_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[0];
@@ -60,6 +58,6 @@ export const authenticate = async (
 		return res.status(401).json({ ok: false, error: SSO_NOT_APPROVED_MESSAGE });
 	}
 
-	res.locals.user = toAuthUser(user.toObject());
+	res.locals.user = user.toObject();
 	return next();
 };
