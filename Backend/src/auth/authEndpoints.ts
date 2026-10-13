@@ -22,7 +22,7 @@ import {
 	type RawSsoTokenPayload,
 	verifiedSsoTokenPayloadSchema,
 } from "./authSchemas";
-import { toAuthUser, toAuthUserResponse } from "./toAuthUser";
+import { toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
 
 const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
@@ -117,10 +117,8 @@ export const ssoSigninEndpoint = async (
 			return;
 		}
 
-		const authUser = toAuthUser(user);
-
 		const tokenPayload = {
-			personalNumber: authUser.personalNumber,
+			personalNumber: user.personalNumber,
 		};
 
 		const appJwt = jwt.sign(tokenPayload, env.ONESYSTEM_SECRET_KEY_JWT, {
@@ -129,7 +127,7 @@ export const ssoSigninEndpoint = async (
 
 		res.json({
 			ok: true,
-			result: { jwt: appJwt, user: toAuthUserResponse(authUser) },
+			result: { jwt: appJwt, user: toAuthUserResponse(user) },
 		});
 	} catch (error) {
 		console.error("Failed to complete SSO sign-in:", error);
@@ -211,7 +209,7 @@ export async function signUpEndpoint(
 			return;
 		}
 
-		const authUser = toAuthUser(createdUser.toObject());
+		const authUser = createdUser.toObject();
 
 		res.json({
 			ok: true,
