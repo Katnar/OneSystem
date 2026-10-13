@@ -1,10 +1,10 @@
-import type { BrandedString } from "../general/Strings/brandedString";
+import { BrandedString } from "../general/Strings/brandedString";
+import { NonEmptyString } from "../general/Strings/nonEmptyString";
 import type { Mador } from "../mador/mador";
-// just putting this here so it will cause a merge conflict with the auth PR.
-// I need this type but I also need to make sure someone remembers to clean the temporary type I created and a merge conflict is a great reminder.
-export type PersonalNumber = BrandedString<"personal number">;
 
-// this one you should actually keep when merging if not already implemented in  the PR
+export const UserApprovalStatus = { APPROVED: true, PENDING: false } as const;
+export type UserApprovalStatus = (typeof UserApprovalStatus)[keyof typeof UserApprovalStatus];
+
 export const Role = {
 	SYSTEM_ADMIN: "מנהל מערכת",
 	BUDGET_MANAGER: "מנהל תקציב",
@@ -13,8 +13,19 @@ export const Role = {
 } as const;
 export type Role = (typeof Role)[keyof typeof Role];
 
-// again, i need this type but i need for someone to remember to replace it with the actual type so merge conflict it is
+export type PersonalNumber = BrandedString<"personal number">;
+export type JWTToken = BrandedString<"jwt token">;
+export type SSOToken = BrandedString<"sso token">;
+export type FirstName = BrandedString<"first name">;
+export type LastName = BrandedString<"last name">;
+
 export type User = {
+	personalNumber: PersonalNumber;
+	firstName: FirstName;
+	lastName: LastName;
 	mador: Mador;
+	meshekDescription: NonEmptyString | null;
+	approvalStatus: UserApprovalStatus;
+	signUpDate: Date;
 	role: Role;
 };
