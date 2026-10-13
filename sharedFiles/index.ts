@@ -16,7 +16,7 @@ export type { NonEmptyString } from "./general/Strings/nonEmptyString";
 
 export { Mador, MeshekMador } from "./mador/mador";
 
-export { ERROR_PATH, SIGN_IN_RAW_PATH, buildErrorPath } from "./paths";
+export { ERROR_PATH, buildErrorPath } from "./paths";
 
 export { JWT_LIFETIME_HOURS, PERSONAL_NUMBER_PATTERN } from "./auth/authConsts";
 
