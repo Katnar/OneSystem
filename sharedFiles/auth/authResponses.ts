@@ -1,60 +1,47 @@
-import type { DateString, Result } from "../global";
+import { DateString } from "../general/Date/dateSchema";
+import type {APIResult, Result } from "../global";
 import type { Name, JWTToken, PersonalNumber, User } from "./authTypes";
 
-export const AuthResponseStatus = {
-	Ok: "ok",
-	BadToken: "bad_token",
-	ExpiredToken: "expired_token",
-	NotFound: "not_found",
-	NotApproved: "not_approved",
-	ServerError: "server_error",
-} as const;
-export type AuthResponseStatus = (typeof AuthResponseStatus)[keyof typeof AuthResponseStatus];
+const SERVER_ERROR_MESSAGE = "שגיאת שרת. נסה שוב מאוחר יותר.";
 
-export const SignUpResponseStatus = {
-	Created: "created",
-	InvalidInput: "invalid_input",
-	InvalidPersonalNumber: "invalid_personal_number",
-	AlreadyExists: "already_exists",
-	PendingApproval: "pending_approval",
-	ServerError: "server_error",
-} as const;
-export type SignUpResponseStatus = (typeof SignUpResponseStatus)[keyof typeof SignUpResponseStatus];
+export const SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE = "משתמש לא נמצא. יש להירשם למערכת";
 
-export const AuthStatus = AuthResponseStatus;
-export type AuthStatus = AuthResponseStatus;
+export const SSO_SIGNIN_ERROR_MESSAGES = [
+	"קישור ההתחברות אינו תקין",
+	"פג תוקף קישור ההתחברות",
+	"המשתמש טרם אושר",
+	SERVER_ERROR_MESSAGE,
+] as const;
+export type SsoSigninErrorMessage = (typeof SSO_SIGNIN_ERROR_MESSAGES)[number];
 
-export const SignUpStatus = SignUpResponseStatus;
-export type SignUpStatus = SignUpResponseStatus;
+export const SIGN_UP_SUCCESS_MESSAGE = "משתמש נוצר בהצלחה";
 
-export const SIGN_UP_RESPONSE_LABELS = {
-	[SignUpResponseStatus.Created]: "משתמש נוצר בהצלחה",
-	[SignUpResponseStatus.InvalidInput]: "קלט לא תקין",
-	[SignUpResponseStatus.InvalidPersonalNumber]: "מספר אישי לא תקין",
-	[SignUpResponseStatus.AlreadyExists]: "משתמש כבר קיים",
-	[SignUpResponseStatus.PendingApproval]: "משתמש ממתין לאישור",
-	[SignUpResponseStatus.ServerError]: "שגיאת שרת. נסה שוב מאוחר יותר.",
-} satisfies Record<SignUpResponseStatus, string>;
+export const SIGN_UP_ERROR_MESSAGES = [
+	"קלט לא תקין",
+	"מספר אישי לא תקין",
+	"משתמש כבר קיים",
+	"משתמש ממתין לאישור",
+	SERVER_ERROR_MESSAGE,
+] as const;
+export type SignUpErrorResponse = (typeof SIGN_UP_ERROR_MESSAGES)[number];
 
 export type UserResponse = Omit<User, "signUpDate"> & {
 	signUpDate: DateString;
 };
 
+export type SsoSigninRequiresSignUpResponse = {
+	message: typeof SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE;
+	firstName: Name;
+	lastName: Name;
+	personalNumber: PersonalNumber;
+};
+
 // GET {api}/auth/sso_signin
-export type SsoSigninResultType = Result<
+export type SsoSigninResultType = APIResult<
 	{ jwt: JWTToken; user: UserResponse },
-	| {
-			status: typeof AuthResponseStatus.NotFound;
-			firstName: Name;
-			lastName: Name;
-			personalNumber: PersonalNumber;
-	  }
-	| {
-			status: Exclude<AuthResponseStatus, typeof AuthResponseStatus.Ok | typeof AuthResponseStatus.NotFound>;
-	  }
+	SsoSigninRequiresSignUpResponse | SsoSigninErrorMessage
 >;
 
 // POST {api}/auth/signup
-export type SignUpSuccessResponse = { status: typeof SignUpResponseStatus.Created };
-export type SignUpErrorResponse = { status: Exclude<SignUpResponseStatus, typeof SignUpResponseStatus.Created> };
-export type SignUpResultType = Result<SignUpSuccessResponse, SignUpErrorResponse>;
+export type SignUpSuccessResponse = typeof SIGN_UP_SUCCESS_MESSAGE;
+export type SignUpResultType = APIResult<SignUpSuccessResponse, SignUpErrorResponse>;
