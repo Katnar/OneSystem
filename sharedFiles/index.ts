@@ -29,13 +29,14 @@ export {
 	SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE,
 } from "./auth/authResponses";
 export type {
+	AuthUserResponse,
 	SignUpErrorResponse,
 	SignUpResultType,
 	SignUpSuccessResponse,
 	SsoSigninErrorMessage,
 	SsoSigninRequiresSignUpResponse,
 	SsoSigninResultType,
-	UserResponse,
+	SsoSigninSuccessResponse,
 } from "./auth/authResponses";
 
 export { Role, UserApprovalStatus } from "./auth/authTypes";
@@ -46,10 +47,10 @@ export type { Permission } from "./auth/permissions";
 
 export {
 	NameSchema,
+	firstNameSchema,
 	jwtTokenSchema,
+	lastNameSchema,
 	madorSchema,
 	personalNumberSchema,
 	roleSchema,
-	signUpPayloadSchema,
-	ssoTokenSchema,
 } from "./auth/authSchemas";

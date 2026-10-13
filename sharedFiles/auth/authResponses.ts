@@ -1,6 +1,6 @@
 import { DateString } from "../general/Date/dateSchema";
 import type { Result } from "../global";
-import type { Name, JWTToken, PersonalNumber, User } from "./authTypes";
+import type { FirstName, JWTToken, LastName, PersonalNumber, User } from "./authTypes";
 
 const SERVER_ERROR_MESSAGE = "שגיאת שרת. נסה שוב מאוחר יותר.";
 
@@ -25,23 +25,28 @@ export const SIGN_UP_ERROR_MESSAGES = [
 ] as const;
 export type SignUpErrorResponse = (typeof SIGN_UP_ERROR_MESSAGES)[number];
 
-export type UserResponse = Omit<User, "signUpDate"> & {
+export type AuthUserResponse = Omit<User, "signUpDate"> & {
 	signUpDate: DateString;
 };
 
 export type SsoSigninRequiresSignUpResponse = {
 	message: typeof SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE;
-	firstName: Name;
-	lastName: Name;
+	firstName: FirstName;
+	lastName: LastName;
 	personalNumber: PersonalNumber;
 };
 
+export type SsoSigninSuccessResponse = { jwt: JWTToken; user: AuthUserResponse };
+
 // GET {api}/auth/sso_signin
 export type SsoSigninResultType = Result<
-	{ jwt: JWTToken; user: UserResponse },
+	SsoSigninSuccessResponse,
 	SsoSigninRequiresSignUpResponse | SsoSigninErrorMessage
 >;
 
 // POST {api}/auth/signup
-export type SignUpSuccessResponse = typeof SIGN_UP_SUCCESS_MESSAGE;
+export type SignUpSuccessResponse = {
+	message: typeof SIGN_UP_SUCCESS_MESSAGE;
+	user: AuthUserResponse;
+};
 export type SignUpResultType = Result<SignUpSuccessResponse, SignUpErrorResponse>;

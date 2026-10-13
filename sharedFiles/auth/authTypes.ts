@@ -17,8 +17,8 @@ export type PersonalNumber = BrandedString<"personal number">;
 export type JWTToken = BrandedString<"jwt token">;
 export type SSOToken = BrandedString<"sso token">;
 export type Name = BrandedString<"name">;
-export type LastName = Name;
-export type FirstName = Name;
+export type FirstName = BrandedString<"first name">;
+export type LastName = BrandedString<"last name">;
 
 export type User = {
 	personalNumber: PersonalNumber;
