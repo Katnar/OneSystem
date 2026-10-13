@@ -40,13 +40,12 @@ export type {
 } from "./auth/authResponses";
 
 export { Role, UserApprovalStatus } from "./auth/authTypes";
-export type { FirstName, JWTToken, LastName, Name, PersonalNumber, SSOToken, User } from "./auth/authTypes";
+export type { FirstName, JWTToken, LastName, PersonalNumber, SSOToken, User } from "./auth/authTypes";
 
 export { allowOnly, hasPermission, intersectPermissions, unitePermissions } from "./auth/permissions";
 export type { Permission } from "./auth/permissions";
 
 export {
-	NameSchema,
 	firstNameSchema,
 	jwtTokenSchema,
 	lastNameSchema,

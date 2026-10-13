@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Mador } from "../mador/mador";
 import { PERSONAL_NUMBER_PATTERN } from "./authConsts";
-import { Role, type FirstName, type JWTToken, type LastName, type Name, type PersonalNumber } from "./authTypes";
+import { Role, type FirstName, type JWTToken, type LastName, type PersonalNumber } from "./authTypes";
 
 export const personalNumberSchema = z
 	.string()
@@ -15,7 +15,6 @@ export const jwtTokenSchema = z
 
 const baseNameSchema = z.string().trim().min(2).max(32);
 
-export const NameSchema = baseNameSchema.transform(value => value as Name) satisfies z.ZodType<Name>;
 
 export const firstNameSchema = baseNameSchema.transform(value => value as FirstName) satisfies z.ZodType<FirstName>;
 
