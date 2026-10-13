@@ -1,5 +1,8 @@
-import { APIResult, BrandedString, NonEmptyArray, NonEmptyString, SomeOrDefault } from "./global";
-import { MeshekMador } from "./mador/mador";
+import type { NonEmptyArray } from "./general/Arrays/nonEmptyArray";
+import type { BrandedString } from "./general/Strings/brandedString";
+import type { NonEmptyString } from "./general/Strings/nonEmptyString";
+import type { APIResult, SomeOrDefault } from "./global";
+import type { MeshekMador } from "./mador/mador";
 
 // ----------------------- BASIC TYPES ------------------------------------
 

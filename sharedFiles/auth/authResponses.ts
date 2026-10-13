@@ -1,5 +1,5 @@
 import { DateString } from "../general/Date/dateSchema";
-import type {APIResult, Result } from "../global";
+import type { APIResult } from "../global";
 import type { Name, JWTToken, PersonalNumber, User } from "./authTypes";
 
 const SERVER_ERROR_MESSAGE = "שגיאת שרת. נסה שוב מאוחר יותר.";

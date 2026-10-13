@@ -1,4 +1,6 @@
-import { NonEmptyArray, tryIntoNonEmptyArr, unwrap } from "../global";
+import { tryIntoNonEmptyArr } from "../general/Arrays/nonEmptyArray";
+import type { NonEmptyArray } from "../general/Arrays/nonEmptyArray";
+import { unwrap } from "../global";
 import { Mador } from "../mador/mador";
 import { Role } from "./authTypes";
 
