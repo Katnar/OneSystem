@@ -1,5 +1,5 @@
 import { DateString } from "../general/Date/dateSchema";
-import type { APIResult } from "../global";
+import type { Result } from "../global";
 import type { Name, JWTToken, PersonalNumber, User } from "./authTypes";
 
 const SERVER_ERROR_MESSAGE = "שגיאת שרת. נסה שוב מאוחר יותר.";
@@ -37,11 +37,11 @@ export type SsoSigninRequiresSignUpResponse = {
 };
 
 // GET {api}/auth/sso_signin
-export type SsoSigninResultType = APIResult<
+export type SsoSigninResultType = Result<
 	{ jwt: JWTToken; user: UserResponse },
 	SsoSigninRequiresSignUpResponse | SsoSigninErrorMessage
 >;
 
 // POST {api}/auth/signup
 export type SignUpSuccessResponse = typeof SIGN_UP_SUCCESS_MESSAGE;
-export type SignUpResultType = APIResult<SignUpSuccessResponse, SignUpErrorResponse>;
+export type SignUpResultType = Result<SignUpSuccessResponse, SignUpErrorResponse>;
