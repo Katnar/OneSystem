@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { createContext, useContext, useState } from "react";
 import { SomeOrDefault } from "../../../sharedFiles/global";
