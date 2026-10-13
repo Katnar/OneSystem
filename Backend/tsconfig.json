@@ -7,8 +7,6 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"moduleResolution": "node",
-		"baseUrl": ".",
 		"paths": {
 			"@onesystem/shared": ["../sharedFiles"],
 			"@onesystem/shared/*": ["../sharedFiles/*"],

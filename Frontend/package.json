@@ -35,7 +35,6 @@
 		"prettier": "^3.9.6"
 	},
 	"dependencies": {
-		"@onesystem/shared": "file:../sharedFiles",
 		"axios": "^1.20.0",
 		"react": "^19.3.0",
 		"react-dom": "^19.3.0",
