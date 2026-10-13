@@ -1,10 +1,12 @@
 import { Schema, model } from "mongoose";
 import { COLLECTION_NAMES } from "../../collectionsConsts";
 import {
+	Role,
 	type FirstName,
 	type LastName,
 	type UserApprovalStatus,
 	type PersonalNumber,
+	type Role as RoleType,
 } from "@onesystem/shared/auth/authTypes";
 import type { NonEmptyString } from "@onesystem/shared/general/Strings/nonEmptyString";
 import { Mador, type Mador as MadorType } from "@onesystem/shared/mador/mador";
@@ -17,6 +19,7 @@ export type UserRecord = {
 	meshekDescription: NonEmptyString | null;
 	approvalStatus: UserApprovalStatus;
 	signUpDate: Date;
+	role: RoleType;
 };
 
 export const UserSchema = new Schema<UserRecord>(
@@ -33,6 +36,7 @@ export const UserSchema = new Schema<UserRecord>(
 		meshekDescription: { type: String, default: null },
 		approvalStatus: { type: Boolean, default: false },
 		signUpDate: { type: Date, default: Date.now },
+		role: { type: String, enum: Object.values(Role), required: true },
 	},
 	{
 		_id: false,

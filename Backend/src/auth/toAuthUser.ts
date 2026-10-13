@@ -12,6 +12,7 @@ export function toAuthUser(user: UserRecord): User {
 		meshekDescription: user.meshekDescription,
 		approvalStatus: user.approvalStatus,
 		signUpDate: user.signUpDate,
+		role: user.role,
 	};
 }
 
