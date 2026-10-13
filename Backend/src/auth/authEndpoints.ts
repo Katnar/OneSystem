@@ -15,12 +15,13 @@ import type { Result } from "@onesystem/shared/global";
 import { z } from "zod";
 
 import {
-	NameSchema,
+	firstNameSchema,
+	lastNameSchema,
+	rawSsoTokenPayloadSchema,
 	signUpPayloadSchema,
-	ssoClaimsSchema,
-	ssoDataSchema,
-	type SSODataType,
-} from "@onesystem/shared/auth/authSchemas";
+	type RawSsoTokenPayload,
+	verifiedSsoTokenPayloadSchema,
+} from "./authSchemas";
 import { toAuthUser, toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
 
@@ -34,11 +35,11 @@ const SIGN_UP_ALREADY_EXISTS_MESSAGE = SIGN_UP_ERROR_MESSAGES[2];
 const SIGN_UP_PENDING_APPROVAL_MESSAGE = SIGN_UP_ERROR_MESSAGES[3];
 const SIGN_UP_SERVER_ERROR_MESSAGE = SIGN_UP_ERROR_MESSAGES[4];
 
-type SsoTokenVerificationResult = Result<SSODataType, typeof SSO_AUTHENTICATION_ERROR>;
+type SsoTokenVerificationResult = Result<RawSsoTokenPayload, typeof SSO_AUTHENTICATION_ERROR>;
 
 function verifySsoToken(token: SSOToken): SsoTokenVerificationResult {
 	try {
-		const parsedPayload = ssoDataSchema.safeParse(jwt.verify(token, env.SSO_DECRYPT_KEY_JWT));
+		const parsedPayload = rawSsoTokenPayloadSchema.safeParse(jwt.verify(token, env.SSO_DECRYPT_KEY_JWT));
 		if (!parsedPayload.success) {
 			return { ok: false, error: SSO_AUTHENTICATION_ERROR };
 		}
@@ -81,16 +82,16 @@ export const ssoSigninEndpoint = async (
 			return;
 		}
 
-		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.result);
+		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken.result);
 
-		if (!claims.success) {
+		if (!verifiedPayload.success) {
 			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
 		}
 
-		const { fname, lname, pn } = claims.data;
-		const firstName = NameSchema.safeParse(fname);
-		const lastName = NameSchema.safeParse(lname);
+		const { fname, lname, pn } = verifiedPayload.data;
+		const firstName = firstNameSchema.safeParse(fname);
+		const lastName = lastNameSchema.safeParse(lname);
 		if (!firstName.success || !lastName.success) {
 			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
@@ -161,8 +162,8 @@ export async function signUpEndpoint(
 			return;
 		}
 
-		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.result);
-		if (!claims.success) {
+		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken.result);
+		if (!verifiedPayload.success) {
 			res.status(400).json({
 				ok: false,
 				error: SIGN_UP_INVALID_PERSONAL_NUMBER_MESSAGE,
@@ -170,7 +171,7 @@ export async function signUpEndpoint(
 			return;
 		}
 
-		const { pn } = claims.data;
+		const { pn } = verifiedPayload.data;
 		const existing = await usersModel.findOne({ personalNumber: pn });
 		if (existing) {
 			res.status(400).json({
@@ -210,7 +211,12 @@ export async function signUpEndpoint(
 			return;
 		}
 
-		res.json({ ok: true, result: SIGN_UP_SUCCESS_MESSAGE });
+		const authUser = toAuthUser(createdUser.toObject());
+
+		res.json({
+			ok: true,
+			result: { message: SIGN_UP_SUCCESS_MESSAGE, user: toAuthUserResponse(authUser) },
+		});
 	} catch (error) {
 		console.error("Failed to complete signup:", error);
 		res.status(500).json({ ok: false, error: SIGN_UP_SERVER_ERROR_MESSAGE });
