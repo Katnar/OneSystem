@@ -1,6 +1,8 @@
 import {
-	AuthStatus,
-	SignUpStatus,
+	SIGN_UP_ERROR_MESSAGES,
+	SIGN_UP_SUCCESS_MESSAGE,
+	SSO_SIGNIN_ERROR_MESSAGES,
+	SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE,
 	type SignUpResultType,
 	type SsoSigninResultType,
 } from "@onesystem/shared/auth/authResponses";
@@ -8,7 +10,7 @@ import { usersModel } from "../models/user";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "@onesystem/shared/auth/authConsts";
-import { type JWTToken, type SSOToken, type User, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
+import { type JWTToken, type SSOToken, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
 import type { Result } from "@onesystem/shared/global";
 import { z } from "zod";
 
@@ -19,10 +21,18 @@ import {
 	ssoDataSchema,
 	type SSODataType,
 } from "@onesystem/shared/auth/authSchemas";
-import { toAuthUserResponse } from "./toAuthUser";
+import { toAuthUser, toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
 
 const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
+const SSO_BAD_TOKEN_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[0];
+const SSO_NOT_APPROVED_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[2];
+const SSO_SERVER_ERROR_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[3];
+const SIGN_UP_INVALID_INPUT_MESSAGE = SIGN_UP_ERROR_MESSAGES[0];
+const SIGN_UP_INVALID_PERSONAL_NUMBER_MESSAGE = SIGN_UP_ERROR_MESSAGES[1];
+const SIGN_UP_ALREADY_EXISTS_MESSAGE = SIGN_UP_ERROR_MESSAGES[2];
+const SIGN_UP_PENDING_APPROVAL_MESSAGE = SIGN_UP_ERROR_MESSAGES[3];
+const SIGN_UP_SERVER_ERROR_MESSAGE = SIGN_UP_ERROR_MESSAGES[4];
 
 type SsoTokenVerificationResult = Result<SSODataType, typeof SSO_AUTHENTICATION_ERROR>;
 
@@ -55,26 +65,26 @@ export const ssoSigninEndpoint = async (
 		const authHeader = req.headers.authorization;
 
 		if (!authHeader?.startsWith("Bearer ")) {
-			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
+			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
 		}
 
 		const ssoToken = authHeader.split(" ")[1] as SSOToken | undefined;
 		if (!ssoToken) {
-			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
+			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
 		}
 
 		const verifiedSsoToken = verifySsoToken(ssoToken);
 		if (!verifiedSsoToken.ok) {
-			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
+			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
 		}
 
 		const claims = ssoClaimsSchema.safeParse(verifiedSsoToken.result);
 
 		if (!claims.success) {
-			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
+			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
 		}
 
@@ -82,7 +92,7 @@ export const ssoSigninEndpoint = async (
 		const firstName = NameSchema.safeParse(fname);
 		const lastName = NameSchema.safeParse(lname);
 		if (!firstName.success || !lastName.success) {
-			res.status(401).json({ ok: false, error: { status: AuthStatus.BadToken } });
+			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
 			return;
 		}
 
@@ -92,7 +102,7 @@ export const ssoSigninEndpoint = async (
 			res.status(404).json({
 				ok: false,
 				error: {
-					status: AuthStatus.NotFound,
+					message: SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE,
 					firstName: firstName.data,
 					lastName: lastName.data,
 					personalNumber: pn,
@@ -102,11 +112,11 @@ export const ssoSigninEndpoint = async (
 		}
 
 		if (user.approvalStatus !== UserApprovalStatus.APPROVED) {
-			res.status(401).json({ ok: false, error: { status: AuthStatus.NotApproved } });
+			res.status(401).json({ ok: false, error: SSO_NOT_APPROVED_MESSAGE });
 			return;
 		}
 
-		const authUser = user as User;
+		const authUser = toAuthUser(user);
 
 		const tokenPayload = {
 			personalNumber: authUser.personalNumber,
@@ -122,7 +132,7 @@ export const ssoSigninEndpoint = async (
 		});
 	} catch (error) {
 		console.error("Failed to complete SSO sign-in:", error);
-		res.status(500).json({ ok: false, error: { status: AuthStatus.ServerError } });
+		res.status(500).json({ ok: false, error: SSO_SERVER_ERROR_MESSAGE });
 	}
 };
 
@@ -135,7 +145,7 @@ export async function signUpEndpoint(
 		if (!parsedPayload.success) {
 			res.status(400).json({
 				ok: false,
-				error: { status: SignUpStatus.InvalidInput },
+				error: SIGN_UP_INVALID_INPUT_MESSAGE,
 			});
 			return;
 		}
@@ -146,7 +156,7 @@ export async function signUpEndpoint(
 		if (!verifiedSsoToken.ok) {
 			res.status(400).json({
 				ok: false,
-				error: { status: SignUpStatus.InvalidInput },
+				error: SIGN_UP_INVALID_INPUT_MESSAGE,
 			});
 			return;
 		}
@@ -155,7 +165,7 @@ export async function signUpEndpoint(
 		if (!claims.success) {
 			res.status(400).json({
 				ok: false,
-				error: { status: SignUpStatus.InvalidPersonalNumber },
+				error: SIGN_UP_INVALID_PERSONAL_NUMBER_MESSAGE,
 			});
 			return;
 		}
@@ -165,12 +175,10 @@ export async function signUpEndpoint(
 		if (existing) {
 			res.status(400).json({
 				ok: false,
-				error: {
-					status:
-						existing.approvalStatus === UserApprovalStatus.APPROVED
-							? SignUpStatus.AlreadyExists
-							: SignUpStatus.PendingApproval,
-				},
+				error:
+					existing.approvalStatus === UserApprovalStatus.APPROVED
+						? SIGN_UP_ALREADY_EXISTS_MESSAGE
+						: SIGN_UP_PENDING_APPROVAL_MESSAGE,
 			});
 			return;
 		}
@@ -181,6 +189,7 @@ export async function signUpEndpoint(
 			lastName: user.lastName,
 			mador: user.mador,
 			meshekDescription: user.meshekDescription,
+			role: user.role,
 		});
 
 		try {
@@ -193,19 +202,17 @@ export async function signUpEndpoint(
 			const duplicateUser = await usersModel.findOne({ personalNumber: pn });
 			res.status(400).json({
 				ok: false,
-				error: {
-					status:
-						duplicateUser?.approvalStatus === UserApprovalStatus.PENDING
-							? SignUpStatus.PendingApproval
-							: SignUpStatus.AlreadyExists,
-				},
+				error:
+					duplicateUser?.approvalStatus === UserApprovalStatus.PENDING
+						? SIGN_UP_PENDING_APPROVAL_MESSAGE
+						: SIGN_UP_ALREADY_EXISTS_MESSAGE,
 			});
 			return;
 		}
 
-		res.json({ ok: true, result: { status: SignUpStatus.Created } });
+		res.json({ ok: true, result: SIGN_UP_SUCCESS_MESSAGE });
 	} catch (error) {
 		console.error("Failed to complete signup:", error);
-		res.status(500).json({ ok: false, error: { status: SignUpStatus.ServerError } });
+		res.status(500).json({ ok: false, error: SIGN_UP_SERVER_ERROR_MESSAGE });
 	}
 }
