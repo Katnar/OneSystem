@@ -1,7 +1,7 @@
 import axios from "axios";
 import {
-	AuthStatus,
-	SignUpStatus,
+	SIGN_UP_ERROR_MESSAGES,
+	SSO_SIGNIN_ERROR_MESSAGES,
 	type SsoSigninResultType,
 	type SignUpResultType,
 } from "@onesystem/shared/auth/authResponses";
@@ -11,6 +11,8 @@ import { signUpResultSchema, ssoSigninResultSchema } from "@onesystem/shared/aut
 import { setAuthToken } from "../store/AuthStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+const SSO_SERVER_ERROR_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[3];
+const SIGN_UP_SERVER_ERROR_MESSAGE = SIGN_UP_ERROR_MESSAGES[4];
 
 const api = axios.create({
 	baseURL: API_BASE_URL,
@@ -27,7 +29,7 @@ export async function ssoSignIn(ssoToken: SSOToken): Promise<SsoSigninResultType
 	const parsedResult = ssoSigninResultSchema.safeParse(response.data);
 	const result: SsoSigninResultType = parsedResult.success
 		? parsedResult.data
-		: { ok: false, error: { status: AuthStatus.ServerError } };
+		: { ok: false, error: SSO_SERVER_ERROR_MESSAGE };
 	if (result.ok) {
 		setAuthToken(result.result.jwt);
 	}
@@ -38,5 +40,5 @@ export async function ssoSignIn(ssoToken: SSOToken): Promise<SsoSigninResultType
 export async function signUp(payload: SignUpPayload): Promise<SignUpResultType> {
 	const response = await api.post<unknown>("/auth/signup", payload);
 	const parsedResult = signUpResultSchema.safeParse(response.data);
-	return parsedResult.success ? parsedResult.data : { ok: false, error: { status: SignUpStatus.ServerError } };
+	return parsedResult.success ? parsedResult.data : { ok: false, error: SIGN_UP_SERVER_ERROR_MESSAGE };
 }
