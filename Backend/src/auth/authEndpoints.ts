@@ -11,7 +11,6 @@ import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "@onesystem/shared/auth/authConsts";
 import { type JWTToken, type SSOToken, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
-import type { Result } from "@onesystem/shared/global";
 import { z } from "zod";
 
 import {
@@ -25,28 +24,16 @@ import {
 import { toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
 
-const SSO_AUTHENTICATION_ERROR = "שגיאה בהזדהות של החוגר";
-const SSO_BAD_TOKEN_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[0];
-const SSO_NOT_APPROVED_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[2];
-const SSO_SERVER_ERROR_MESSAGE = SSO_SIGNIN_ERROR_MESSAGES[3];
-const SIGN_UP_INVALID_INPUT_MESSAGE = SIGN_UP_ERROR_MESSAGES[0];
-const SIGN_UP_INVALID_PERSONAL_NUMBER_MESSAGE = SIGN_UP_ERROR_MESSAGES[1];
-const SIGN_UP_ALREADY_EXISTS_MESSAGE = SIGN_UP_ERROR_MESSAGES[2];
-const SIGN_UP_PENDING_APPROVAL_MESSAGE = SIGN_UP_ERROR_MESSAGES[3];
-const SIGN_UP_SERVER_ERROR_MESSAGE = SIGN_UP_ERROR_MESSAGES[4];
-
-type SsoTokenVerificationResult = Result<RawSsoTokenPayload, typeof SSO_AUTHENTICATION_ERROR>;
-
-function verifySsoToken(token: SSOToken): SsoTokenVerificationResult {
+function verifySsoToken(token: SSOToken): RawSsoTokenPayload | null {
 	try {
 		const parsedPayload = rawSsoTokenPayloadSchema.safeParse(jwt.verify(token, env.SSO_DECRYPT_KEY_JWT));
 		if (!parsedPayload.success) {
-			return { ok: false, error: SSO_AUTHENTICATION_ERROR };
+			return null;
 		}
 
-		return { ok: true, result: parsedPayload.data };
+		return parsedPayload.data;
 	} catch {
-		return { ok: false, error: SSO_AUTHENTICATION_ERROR };
+		return null;
 	}
 }
 
@@ -66,26 +53,26 @@ export const ssoSigninEndpoint = async (
 		const authHeader = req.headers.authorization;
 
 		if (!authHeader?.startsWith("Bearer ")) {
-			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
+			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
 			return;
 		}
 
 		const ssoToken = authHeader.split(" ")[1] as SSOToken | undefined;
 		if (!ssoToken) {
-			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
+			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
 			return;
 		}
 
 		const verifiedSsoToken = verifySsoToken(ssoToken);
-		if (!verifiedSsoToken.ok) {
-			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
+		if (!verifiedSsoToken) {
+			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
 			return;
 		}
 
-		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken.result);
+		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken);
 
 		if (!verifiedPayload.success) {
-			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
+			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
 			return;
 		}
 
@@ -93,7 +80,7 @@ export const ssoSigninEndpoint = async (
 		const firstName = firstNameSchema.safeParse(fname);
 		const lastName = lastNameSchema.safeParse(lname);
 		if (!firstName.success || !lastName.success) {
-			res.status(401).json({ ok: false, error: SSO_BAD_TOKEN_MESSAGE });
+			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
 			return;
 		}
 
@@ -113,7 +100,7 @@ export const ssoSigninEndpoint = async (
 		}
 
 		if (user.approvalStatus !== UserApprovalStatus.APPROVED) {
-			res.status(401).json({ ok: false, error: SSO_NOT_APPROVED_MESSAGE });
+			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.NOT_APPROVED });
 			return;
 		}
 
@@ -131,7 +118,7 @@ export const ssoSigninEndpoint = async (
 		});
 	} catch (error) {
 		console.error("Failed to complete SSO sign-in:", error);
-		res.status(500).json({ ok: false, error: SSO_SERVER_ERROR_MESSAGE });
+		res.status(500).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.SERVER_ERROR });
 	}
 };
 
@@ -144,7 +131,7 @@ export async function signUpEndpoint(
 		if (!parsedPayload.success) {
 			res.status(400).json({
 				ok: false,
-				error: SIGN_UP_INVALID_INPUT_MESSAGE,
+				error: SIGN_UP_ERROR_MESSAGES.INVALID_INPUT,
 			});
 			return;
 		}
@@ -152,19 +139,19 @@ export async function signUpEndpoint(
 		const { ssoToken, user } = parsedPayload.data;
 
 		const verifiedSsoToken = verifySsoToken(ssoToken);
-		if (!verifiedSsoToken.ok) {
+		if (!verifiedSsoToken) {
 			res.status(400).json({
 				ok: false,
-				error: SIGN_UP_INVALID_INPUT_MESSAGE,
+				error: SIGN_UP_ERROR_MESSAGES.INVALID_INPUT,
 			});
 			return;
 		}
 
-		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken.result);
+		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken);
 		if (!verifiedPayload.success) {
 			res.status(400).json({
 				ok: false,
-				error: SIGN_UP_INVALID_PERSONAL_NUMBER_MESSAGE,
+				error: SIGN_UP_ERROR_MESSAGES.INVALID_PERSONAL_NUMBER,
 			});
 			return;
 		}
@@ -176,8 +163,8 @@ export async function signUpEndpoint(
 				ok: false,
 				error:
 					existing.approvalStatus === UserApprovalStatus.APPROVED
-						? SIGN_UP_ALREADY_EXISTS_MESSAGE
-						: SIGN_UP_PENDING_APPROVAL_MESSAGE,
+						? SIGN_UP_ERROR_MESSAGES.ALREADY_EXISTS
+						: SIGN_UP_ERROR_MESSAGES.PENDING_APPROVAL,
 			});
 			return;
 		}
@@ -203,8 +190,8 @@ export async function signUpEndpoint(
 				ok: false,
 				error:
 					duplicateUser?.approvalStatus === UserApprovalStatus.PENDING
-						? SIGN_UP_PENDING_APPROVAL_MESSAGE
-						: SIGN_UP_ALREADY_EXISTS_MESSAGE,
+						? SIGN_UP_ERROR_MESSAGES.PENDING_APPROVAL
+						: SIGN_UP_ERROR_MESSAGES.ALREADY_EXISTS,
 			});
 			return;
 		}
@@ -217,6 +204,6 @@ export async function signUpEndpoint(
 		});
 	} catch (error) {
 		console.error("Failed to complete signup:", error);
-		res.status(500).json({ ok: false, error: SIGN_UP_SERVER_ERROR_MESSAGE });
+		res.status(500).json({ ok: false, error: SIGN_UP_ERROR_MESSAGES.SERVER_ERROR });
 	}
 }
