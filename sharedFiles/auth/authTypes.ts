@@ -1,4 +1,5 @@
-import type { BrandedString, NonEmptyString } from "../global";
+import { BrandedString } from "../general/Strings/brandedString";
+import { NonEmptyString } from "../general/Strings/nonEmptyString";
 import type { Mador } from "../mador/mador";
 
 export const UserApprovalStatus = { APPROVED: true, PENDING: false } as const;
@@ -27,4 +28,5 @@ export type User = {
 	meshekDescription: NonEmptyString | null;
 	approvalStatus: UserApprovalStatus;
 	signUpDate: Date;
+	role: Role;
 };

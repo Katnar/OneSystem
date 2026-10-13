@@ -1,20 +1,8 @@
+import { DateString } from "./general/Date/dateSchema";
 declare const brandSymbol: unique symbol;
 export type AssertOnly<T, UniqueTypeId> = T & {
 	readonly [brandSymbol]: UniqueTypeId;
 };
-// does'nt use the AssertOnly type so it will also identify any string written which is'nt empty as a NonEmptyString at compile time
-export type NonEmptyString = `${any}${string}`;
-
-export type BrandedString<UniqueTypeId extends NonEmptyString> = AssertOnly<string, UniqueTypeId>;
-
-export type BrandedNumber<UniqueTypeId extends NonEmptyString> = AssertOnly<number, UniqueTypeId>;
-
-export type Year = BrandedNumber<"year">;
-
-export type DateString = BrandedString<"date string">;
-
-// NOTE: in general it is not a great idea to store money in floating points but JS is a stupid language that make it hard to avoid using floating points so...
-export type MoneyILS = BrandedNumber<"israeli shekel">;
 
 type AsObjectSent<T> = {
 	[K in keyof T]: AsWireType<T[K]>;
@@ -23,7 +11,6 @@ type AsObjectSent<T> = {
 // Automatically turns dates to DateStrings accounting for Date | null and whatnot
 export type AsWireType<T> = T extends Date ? DateString : T extends object ? AsObjectSent<T> : T;
 
-export type PhoneNumber = BrandedString<"phone number">;
 
 export type Ok<T> = { ok: true; result: T };
 export type Err<D> = { ok: false; error: D };
@@ -51,32 +38,6 @@ export function unwrap<T, D>(res: Result<T, D>): T {
 export type Some<T> = { some: true; value: T };
 export type Default<D> = { some: false; value: D };
 export type SomeOrDefault<T, D> = Some<T> | Default<D>;
-
-// doesnt use the AssertOnly type so it will also identify any array which isnt empty as a NonEmptyArray at compile time
-export type NonEmptyArray<T> = [T, ...T[]];
-
-export function tryIntoNonEmptyArr<T>(arr: T[]): Result<NonEmptyArray<T>, TypeError> {
-	if (arr.length === 0) {
-		return { ok: false, error: new TypeError("Type assertion failure! Expected non empty array!") };
-	}
-	return { ok: true, result: arr as NonEmptyArray<T> };
-}
-export function assertNotEmptyArr<T>(arr: T[]): asserts arr is NonEmptyArray<T> {
-	unwrap(tryIntoNonEmptyArr(arr));
-}
-
-export function tryIntoNonEmptyString(s: string): Result<NonEmptyString, TypeError> {
-	if (s.length === 0) {
-		{
-			return { ok: false, error: new TypeError("Type assertion failure! Expected non empty string!") };
-		}
-	}
-	return { ok: true, result: s as NonEmptyString };
-}
-export function assertNotEmptyString(s: string): asserts s is NonEmptyString {
-	unwrap(tryIntoNonEmptyString(s));
-}
-
 export function defaultTo<T, D>(res: Result<T, any>, defaultValue: D): SomeOrDefault<T, D> {
 	return { some: res.ok, value: res.ok ? res.result : defaultValue } as SomeOrDefault<T, D>;
 }

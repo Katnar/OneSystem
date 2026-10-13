@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { DateString } from "../../global";
-
+import { BrandedString } from "../Strings/brandedString";
+export type DateString = BrandedString<"date string">;
 export const dateStringSchema = z
 	.string()
 	.refine(value => {
