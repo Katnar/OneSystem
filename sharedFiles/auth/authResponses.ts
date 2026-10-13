@@ -6,24 +6,25 @@ const SERVER_ERROR_MESSAGE = "שגיאת שרת. נסה שוב מאוחר יות
 
 export const SSO_SIGNIN_REQUIRES_SIGN_UP_MESSAGE = "משתמש לא נמצא. יש להירשם למערכת";
 
-export const SSO_SIGNIN_ERROR_MESSAGES = [
-	"קישור ההתחברות אינו תקין",
-	"פג תוקף קישור ההתחברות",
-	"המשתמש טרם אושר",
-	SERVER_ERROR_MESSAGE,
-] as const;
-export type SsoSigninErrorMessage = (typeof SSO_SIGNIN_ERROR_MESSAGES)[number];
+export const SSO_SIGNIN_ERROR_MESSAGES = {
+	BAD_TOKEN: "קישור ההתחברות אינו תקין",
+	EXPIRED_TOKEN: "פג תוקף קישור ההתחברות",
+	NOT_APPROVED: "המשתמש טרם אושר",
+	SERVER_ERROR: SERVER_ERROR_MESSAGE,
+} as const;
+export type SsoSigninErrorMessage =
+	(typeof SSO_SIGNIN_ERROR_MESSAGES)[keyof typeof SSO_SIGNIN_ERROR_MESSAGES];
 
 export const SIGN_UP_SUCCESS_MESSAGE = "משתמש נוצר בהצלחה";
 
-export const SIGN_UP_ERROR_MESSAGES = [
-	"קלט לא תקין",
-	"מספר אישי לא תקין",
-	"משתמש כבר קיים",
-	"משתמש ממתין לאישור",
-	SERVER_ERROR_MESSAGE,
-] as const;
-export type SignUpErrorResponse = (typeof SIGN_UP_ERROR_MESSAGES)[number];
+export const SIGN_UP_ERROR_MESSAGES = {
+	INVALID_INPUT: "קלט לא תקין",
+	INVALID_PERSONAL_NUMBER: "מספר אישי לא תקין",
+	ALREADY_EXISTS: "משתמש כבר קיים",
+	PENDING_APPROVAL: "משתמש ממתין לאישור",
+	SERVER_ERROR: SERVER_ERROR_MESSAGE,
+} as const;
+export type SignUpErrorResponse = (typeof SIGN_UP_ERROR_MESSAGES)[keyof typeof SIGN_UP_ERROR_MESSAGES];
 
 export type AuthUserResponse = Omit<User, "signUpDate"> & {
 	signUpDate: DateString;
