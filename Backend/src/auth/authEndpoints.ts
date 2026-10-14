@@ -6,7 +6,7 @@ import {
 	type SignUpResultType,
 	type SsoSigninResultType,
 } from "@onesystem/shared/auth/authResponses";
-import { usersModel } from "../models/user";
+import { usersModel } from "../users/userModel";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { JWT_LIFETIME_HOURS } from "@onesystem/shared/auth/authConsts";
