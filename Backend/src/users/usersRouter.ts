@@ -20,7 +20,7 @@ usersRouter.use((_req, res, next) => {
 	if (!hasPermission(manageUsersPermission, res.locals.user)) {
 		res.status(403).json({
 			ok: false,
-			error: "FORBIDDEN",
+			error: USERS_ERROR_MESSAGES.FORBIDDEN,
 		});
 		return;
 	}
@@ -68,7 +68,7 @@ const usersErrorHandler: ErrorRequestHandler = (error: unknown, _req, res, next)
 
 	res.status(500).json({
 		ok: false,
-		error: "SERVER_ERROR",
+		error: USERS_ERROR_MESSAGES.SERVER_ERROR,
 	});
 };
 
