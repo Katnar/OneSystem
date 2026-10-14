@@ -19,8 +19,10 @@ declare module "axios" {
 		skipAuth?: boolean;
 	}
 }
-// this wont be guaranteed to call a rerender but thats fine 
-let clearEntireCache = () => {console.info("attempted to clear cache before it's initialized");};
+// this wont be guaranteed to call a rerender but thats fine
+let clearEntireCache = () => {
+	console.info("attempted to clear cache before it's initialized");
+};
 
 const api = axios.create({
 	baseURL: API_URL,
@@ -61,7 +63,7 @@ export type APIContext = {
 
 type DispatchKey = `${"GET" | "DELETE" | "POST" | "PATCH"} ${URL}`;
 
-const APIContext = createContext<APIContext>({} as APIContext);
+const APIContext = createContext<APIContext | undefined>(undefined);
 
 export function APIContextProvider({ children }: { children: React.ReactNode }) {
 	const [dispatched] = useState<Set<DispatchKey>>(new Set());
@@ -70,7 +72,7 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 	clearEntireCache = () => {
 		setCached(new Map());
 	};
-	
+
 	const tryDispatch = async (key: DispatchKey, fn: () => Promise<void>) => {
 		if (!dispatched.has(key)) {
 			dispatched.add(key);
