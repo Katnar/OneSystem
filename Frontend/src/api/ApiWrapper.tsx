@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { createContext, useContext, useState } from "react";
-import { Result, SomeOrDefault } from "../../../sharedFiles/global";
+import { SomeOrDefault } from "../../../sharedFiles/global";
 import { BrandedString } from "@onesystem/shared/general/Strings/brandedString";
 import { unexpectedError } from "../error-handling/unexpectedError";
 
@@ -19,6 +19,8 @@ declare module "axios" {
 		skipAuth?: boolean;
 	}
 }
+// this wont be guaranteed to call a rerender but thats fine 
+let clearEntireCache = () => {console.info("attempted to clear cache before it's initialized");};
 
 const api = axios.create({
 	baseURL: API_URL,
@@ -27,6 +29,7 @@ const api = axios.create({
 api.interceptors.response.use(undefined, error => {
 	const response = error.response;
 	if (response.status === 401) {
+		clearEntireCache();
 		alert("TODO: IMPLEMENT LOGOUT ON 401");
 	}
 	// if the response is in an expected structure like Result, return the response, else throw
@@ -64,6 +67,10 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 	const [dispatched] = useState<Set<DispatchKey>>(new Set());
 	const [cached, setCached] = useState<Map<DispatchKey, any>>(new Map());
 
+	clearEntireCache = () => {
+		setCached(new Map());
+	};
+	
 	const tryDispatch = async (key: DispatchKey, fn: () => Promise<void>) => {
 		if (!dispatched.has(key)) {
 			dispatched.add(key);
@@ -77,7 +84,7 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 			return true;
 		}
 		return false;
-	}
+	};
 
 	const get: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T> = <T,>(
 		url: URL,
@@ -96,47 +103,51 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		return cached.has(key) ? { isLoading: false, data: cached.get(key) } : { isLoading: true };
 	};
 	// delete is a reserved word
-	const deleteFunc: <T>(url: URL, config?: AxiosRequestConfig) => Promise<NonClashingResult<T>> = async <
-		T,
-	>(
+	const deleteFunc: <T>(url: URL, config?: AxiosRequestConfig) => Promise<NonClashingResult<T>> = async <T,>(
 		url: URL,
 		config?: AxiosRequestConfig
 	) => {
 		const key: DispatchKey = `DELETE ${url}`;
 		let respData: T;
-		if (await tryDispatch(key, async () => {
-			respData = (await api.delete<T>(url, config)).data;
-		})) {
+		if (
+			await tryDispatch(key, async () => {
+				respData = (await api.delete<T>(url, config)).data;
+			})
+		) {
 			return { some: true, value: respData! };
 		}
 		return { some: false, value: "בקשה זהה כבר בתהליך" };
 	};
 
-	const post: <P, R>(
+	const post: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<NonClashingResult<R>> = async <P, R>(
 		url: URL,
 		body: P,
 		config?: AxiosRequestConfig
-	) => Promise<NonClashingResult<R>> = async <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => {
+	) => {
 		const key: DispatchKey = `POST ${url}`;
 		let respData: R;
-		if (await tryDispatch(key, async () => {
-			respData = (await api.post<R>(url, body, config)).data;
-		})) {
+		if (
+			await tryDispatch(key, async () => {
+				respData = (await api.post<R>(url, body, config)).data;
+			})
+		) {
 			return { some: true, value: respData! };
 		}
 		return { some: false, value: "בקשה זהה כבר בתהליך" };
 	};
 
-	const patch: <P, R>(
+	const patch: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<NonClashingResult<R>> = async <P, R>(
 		url: URL,
 		body: P,
 		config?: AxiosRequestConfig
-	) => Promise<NonClashingResult<R>> = async <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => {
+	) => {
 		const key: DispatchKey = `PATCH ${url}`;
 		let respData: R;
-		if (await tryDispatch(key, async () => {
-			respData = (await api.patch<R>(url, body, config)).data;
-		})) {
+		if (
+			await tryDispatch(key, async () => {
+				respData = (await api.patch<R>(url, body, config)).data;
+			})
+		) {
 			return { some: true, value: respData! };
 		}
 		return { some: false, value: "בקשה זהה כבר בתהליך" };
