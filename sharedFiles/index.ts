@@ -54,3 +54,13 @@ export {
 	roleSchema,
 	userSchema,
 } from "./auth/authSchemas";
+
+export { editUserPayloadSchema } from "./users";
+export type {
+    EditUserPayload,
+    UsersErrorMessages,
+    GetUsersResponse,
+    EditUserResponse,
+    ApproveUserResponse,
+    DeleteUserResponse,
+} from "./users";

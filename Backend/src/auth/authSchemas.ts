@@ -3,12 +3,11 @@ import type { SignUpPayload } from "../../../sharedFiles/auth/authPayloads";
 import {
 	firstNameSchema,
 	lastNameSchema,
-	madorSchema,
 	personalNumberSchema,
-	roleSchema,
+	hasValidUserManagementFields,
+	userManagementFieldsSchema,
 } from "../../../sharedFiles/auth/authSchemas";
 import type { PersonalNumber, SSOToken } from "../../../sharedFiles/auth/authTypes";
-import { nonEmptyStringSchema } from "../../../sharedFiles/general/Strings/nonEmptyString";
 
 export * from "../../../sharedFiles/auth/authSchemas";
 
@@ -47,11 +46,13 @@ export const ssoTokenSchema = z
 
 export const signUpPayloadSchema = z.object({
 	ssoToken: ssoTokenSchema,
-	user: z.object({
-		firstName: firstNameSchema,
-		lastName: lastNameSchema,
-		mador: madorSchema,
-		meshekDescription: z.union([nonEmptyStringSchema, z.null()]),
-		role: roleSchema,
-	}),
+	user: userManagementFieldsSchema
+		.extend({
+			firstName: firstNameSchema,
+			lastName: lastNameSchema,
+		})
+		.refine(hasValidUserManagementFields, {
+			message: "Invalid role, mador, or meshekDescription combination",
+			path: ["role"],
+		}),
 }) satisfies z.ZodType<SignUpPayload>;
