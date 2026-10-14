@@ -19,7 +19,7 @@
 		"format": "prettier --write \"src/**/*.{ts,json}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,json}\"",
 		"hooks:install": "cd .. && husky Backend/.husky",
-		"format:staged": "cd .. && lint-staged --config Backend/lint-staged.config.cjs"
+		"format:staged": "cd .. && lint-staged --config Backend/lint-staged.config.cjs --concurrent false"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.5",
