@@ -15,8 +15,7 @@
 		"paths": {
 			"zod": ["node_modules/zod", "../Backend/node_modules/zod", "../Frontend/node_modules/zod"],
 			"zod/*": ["node_modules/zod/*", "../Backend/node_modules/zod/*", "../Frontend/node_modules/zod/*"]
-		},
-		"ignoreDeprecations": "6.0"
+		}
 	},
 	"include": ["**/*.ts"],
 	"exclude": ["dist", "node_modules"]
