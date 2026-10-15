@@ -83,9 +83,9 @@ export function isContractUsageAtLeast(contract: ContractFormulaInput, threshold
 }
 
 export function isContractEndingWithinMonths(
-	endDate: Date | DateString | null,
+	endDate: DateString | null,
 	months: Months,
-	currentDate: Date | DateString = new Date()
+	currentDate: DateString = new Date().toISOString() as DateString
 ): boolean {
 	const monthDistance = calcElapsedOrderMonths(currentDate, endDate);
 	return monthDistance !== null && Number.isFinite(months) && monthDistance >= 0 && monthDistance <= months;

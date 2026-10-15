@@ -4,19 +4,19 @@ import { divideOrNull, type Months } from "./common";
 export const AverageMonthInDays = 30;
 
 export function calcOrderCalculationDate(
-	currentDate: Date | DateString | null,
-	endDate: Date | DateString | null
-): Date | null {
+	currentDate: DateString | null,
+	endDate: DateString | null
+): DateString | null {
 	if (currentDate === null || endDate === null) {
 		return null;
 	}
 	const timestamp = Math.min(new Date(currentDate).getTime(), new Date(endDate).getTime());
-	return Number.isFinite(timestamp) ? new Date(timestamp) : null;
+	return Number.isFinite(timestamp) ? (new Date(timestamp).toISOString() as DateString) : null;
 }
 
 export function calcElapsedOrderMonths(
-	startDate: Date | DateString | null,
-	calculationDate: Date | DateString | null
+	startDate: DateString | null,
+	calculationDate: DateString | null
 ): Months | null {
 	if (startDate === null || calculationDate === null) {
 		return null;

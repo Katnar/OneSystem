@@ -28,7 +28,7 @@ export function calcOrderPercentUsage(order: OrderUsageFormulaInput): Percent | 
 
 export function calcMonthlyAverage(
 	order: OrderMonthlyAverageFormulaInput,
-	currentDate: Date | DateString = new Date()
+	currentDate: DateString = new Date().toISOString() as DateString
 ): MoneyILS | null {
 	const calculationDate = calcOrderCalculationDate(currentDate, order.endDate);
 	const elapsedMonths = calcElapsedOrderMonths(order.startDate, calculationDate);
@@ -51,7 +51,7 @@ export function calcGlobalOrderBreathingLength({
 
 export function calcOrderBreathingLength(
 	order: OrderBreathingLengthFormulaInput,
-	currentDate: Date | DateString = new Date()
+	currentDate: DateString = new Date().toISOString() as DateString
 ): Months | null {
 	if (order.type === OrderType.GLOBAL) {
 		return calcGlobalOrderBreathingLength(order);
