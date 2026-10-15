@@ -61,23 +61,8 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 export type Resource<T> = { isLoading: true } | { isLoading: false; data: T };
 export type NonClashingResult<T> = SomeOrDefault<T, "בקשה זהה כבר בתהליך">;
 type AuthEndpoints = {
-	ssoSignin: (ssoToken: SSOToken) => Promise<SsoSigninResultType>;
-	signUp: (body: SignUpPayload) => Promise<SignUpResultType>;
-};
-
-const authEndpoints: AuthEndpoints = {
-	ssoSignin: async ssoToken => {
-		const { data } = await api.get<SsoSigninResultType>(`${API_URL}/auth/sso_signin`, {
-			skipAuth: true,
-			headers: { Authorization: `Bearer ${ssoToken}` },
-		});
-		if (data.ok) authTokenStorage.set(data.result.jwt);
-		return data;
-	},
-	signUp: async body => {
-		const { data } = await api.post<SignUpResultType>(`${API_URL}/auth/signup`, body, { skipAuth: true });
-		return data;
-	},
+	ssoSignin: (ssoToken: SSOToken) => Resource<SsoSigninResultType>;
+	signUp: (body: SignUpPayload) => Promise<NonClashingResult<SignUpResultType>>;
 };
 
 export type APIContext = {
@@ -182,6 +167,18 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 			return { some: true, value: respData! };
 		}
 		return { some: false, value: "בקשה זהה כבר בתהליך" };
+	};
+
+	const authEndpoints: AuthEndpoints = {
+		ssoSignin: ssoToken => {
+			const response = get<SsoSigninResultType>(`${API_URL}/auth/sso_signin`, {
+				skipAuth: true,
+				headers: { Authorization: `Bearer ${ssoToken}` },
+			});
+			if (!response.isLoading && response.data.ok) authTokenStorage.set(response.data.result.jwt);
+			return response;
+		},
+		signUp: body => post<SignUpPayload, SignUpResultType>(`${API_URL}/auth/signup`, body, { skipAuth: true }),
 	};
 
 	return (
