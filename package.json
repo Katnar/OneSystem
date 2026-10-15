@@ -1,0 +1,14 @@
+{
+	"name": "onesystem",
+	"private": true,
+	"scripts": {
+		"prepare": "npm run setup",
+		"setup": "npm ci --prefix sharedFiles && npm ci --prefix Backend && npm ci --prefix Frontend",
+		"build:shared": "npm --prefix sharedFiles run build",
+		"build": "npm run build:shared && npm --prefix Backend run build && npm --prefix Frontend run build",
+		"dev": "npm run build:shared && concurrently --kill-others --names shared,backend,frontend \"npm --prefix sharedFiles run watch\" \"npm --prefix Backend run dev\" \"npm --prefix Frontend run dev\""
+	},
+	"devDependencies": {
+		"concurrently": "^10.0.6"
+	}
+}
