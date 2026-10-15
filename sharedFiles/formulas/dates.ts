@@ -22,5 +22,5 @@ export function calcElapsedOrderMonths(
 		return null;
 	}
 	const elapsedDays = (new Date(calculationDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24);
-	return divideOrNull<Months>(elapsedDays, AverageMonthInDays);
+	return divideOrNull(elapsedDays, AverageMonthInDays) as Months | null;
 }

@@ -18,12 +18,14 @@ export type OrderBreathingLengthFormulaInput =
 	| (Pick<Exclude<Order, GlobalOrder>, "type"> & OrderMonthlyAverageFormulaInput);
 
 export function calcUsedOrderAmount({ orderValueInclVat, balance }: OrderUsageFormulaInput): MoneyILS | null {
-	return orderValueInclVat === null || balance === null ? null : finiteOrNull<MoneyILS>(orderValueInclVat - balance);
+	return orderValueInclVat === null || balance === null
+		? null
+		: (finiteOrNull(orderValueInclVat - balance) as MoneyILS | null);
 }
 
 export function calcOrderPercentUsage(order: OrderUsageFormulaInput): Percent | null {
 	const ratio = divideOrNull(calcUsedOrderAmount(order), order.orderValueInclVat);
-	return ratio === null ? null : finiteOrNull<Percent>(ratio * 100);
+	return ratio === null ? null : (finiteOrNull(ratio * 100) as Percent | null);
 }
 
 export function calcMonthlyAverage(
@@ -32,21 +34,21 @@ export function calcMonthlyAverage(
 ): MoneyILS | null {
 	const calculationDate = calcOrderCalculationDate(currentDate, order.endDate);
 	const elapsedMonths = calcElapsedOrderMonths(order.startDate, calculationDate);
-	return divideOrNull<MoneyILS>(calcUsedOrderAmount(order), elapsedMonths);
+	return divideOrNull(calcUsedOrderAmount(order), elapsedMonths) as MoneyILS | null;
 }
 
 export function calcTimeAndMaterialOrderBreathingLength({
 	balance,
 	monthlyAverage,
 }: TimeAndMaterialOrderBreathingLengthFormulaInput): Months | null {
-	return divideOrNull<Months>(balance, monthlyAverage);
+	return divideOrNull(balance, monthlyAverage) as Months | null;
 }
 
 export function calcGlobalOrderBreathingLength({
 	balance,
 	lastReceiptAmount,
 }: GlobalOrderBreathingLengthFormulaInput): Months | null {
-	return divideOrNull<Months>(balance, lastReceiptAmount);
+	return divideOrNull(balance, lastReceiptAmount) as Months | null;
 }
 
 export function calcOrderBreathingLength(

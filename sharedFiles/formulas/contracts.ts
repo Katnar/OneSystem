@@ -63,7 +63,7 @@ export function calcAvailableBalanceExclVat({
 }: ContractFormulaInput): MoneyILS | null {
 	return agreementValueExclVat === null || usedAmountExclVat === null
 		? null
-		: finiteOrNull<MoneyILS>(agreementValueExclVat - usedAmountExclVat);
+		: (finiteOrNull(agreementValueExclVat - usedAmountExclVat) as MoneyILS | null);
 }
 
 export function calcContractPercentUsage({
@@ -71,11 +71,13 @@ export function calcContractPercentUsage({
 	usedAmountExclVat,
 }: ContractFormulaInput): Percent | null {
 	const ratio = divideOrNull(usedAmountExclVat, agreementValueExclVat);
-	return ratio === null ? null : finiteOrNull<Percent>(ratio * 100);
+	return ratio === null ? null : (finiteOrNull(ratio * 100) as Percent | null);
 }
 
 export function calcAgreementBalanceInclVat(availableBalanceExclVat: MoneyILS | null): MoneyILS | null {
-	return availableBalanceExclVat === null ? null : finiteOrNull<MoneyILS>(availableBalanceExclVat * VatMultiplier);
+	return availableBalanceExclVat === null
+		? null
+		: (finiteOrNull(availableBalanceExclVat * VatMultiplier) as MoneyILS | null);
 }
 
 export function isActiveContractStatus(status: ContractStatus): boolean {
