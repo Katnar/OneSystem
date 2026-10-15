@@ -2,7 +2,6 @@ import { ContractStatus, type Contract } from "../contracts";
 import type { DateString } from "../general/Date/dateSchema";
 import type { MoneyILS } from "../general/NumberStrings/numberStrings";
 import { divideOrNull, finiteOrNull, type FormulaInput, type Months, type Percent } from "./common";
-import { calcElapsedOrderMonths } from "./dates";
 
 export type ContractFormulaInput = FormulaInput<Pick<Contract, "agreementValueExclVat" | "usedAmountExclVat">>;
 
@@ -87,6 +86,22 @@ export function isContractEndingWithinMonths(
 	months: Months,
 	currentDate: DateString = new Date().toISOString() as DateString
 ): boolean {
-	const monthDistance = calcElapsedOrderMonths(currentDate, endDate);
-	return monthDistance !== null && Number.isFinite(months) && monthDistance >= 0 && monthDistance <= months;
+	if (endDate === null || !Number.isInteger(months) || months < 0) {
+		return false;
+	}
+
+	// Compare UTC calendar dates so the time of day does not affect expiry.
+	const current = new Date(currentDate);
+	const end = new Date(endDate);
+	current.setUTCHours(0, 0, 0, 0);
+	end.setUTCHours(0, 0, 0, 0);
+	if (!Number.isFinite(current.getTime()) || !Number.isFinite(end.getTime())) {
+		return false;
+	}
+
+	// Clamp the cutoff day to the last day of the target month.
+	const cutoff = new Date(current);
+	cutoff.setUTCMonth(current.getUTCMonth() + months + 1, 0);
+	cutoff.setUTCDate(Math.min(current.getUTCDate(), cutoff.getUTCDate()));
+	return end.getTime() >= current.getTime() && end.getTime() <= cutoff.getTime();
 }
