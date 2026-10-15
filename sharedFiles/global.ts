@@ -9,7 +9,13 @@ type AsObjectSent<T> = {
 };
 
 // Automatically turns dates to DateStrings accounting for Date | null and whatnot
-export type AsWireType<T> = T extends Date ? DateString : T extends object ? AsObjectSent<T> : T;
+export type AsWireType<T> = T extends Date
+	? DateString
+	: T extends string | number | boolean | bigint | symbol | null | undefined
+		? T
+		: T extends object
+			? AsObjectSent<T>
+			: T;
 
 export type Ok<T> = { ok: true; result: T };
 export type Err<D> = { ok: false; error: D };
