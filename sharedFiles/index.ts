@@ -1,6 +1,43 @@
 export { defaultTo, unwrap } from "./global";
 export type { APIResult, AssertOnly, AsWireType, Default, Err, Ok, Result, Some, SomeOrDefault } from "./global";
 
+export type { Months, Percent } from "./formulas/common";
+
+export {
+	ActiveContractStatuses,
+	RenewalContractStatuses,
+	RiskContractStatuses,
+	VatMultiplier,
+	calcAgreementBalanceInclVat,
+	calcAvailableBalanceExclVat,
+	calcContractPercentUsage,
+	countActiveContractsForSupplier,
+	isActiveContractStatus,
+	isContractEndingWithinMonths,
+	isContractUsageAtLeast,
+	isRenewalContractStatus,
+	isRiskContractStatus,
+} from "./formulas/contracts";
+export type { ContractFormulaInput } from "./formulas/contracts";
+
+export { AverageMonthInDays, calcElapsedOrderMonths, calcOrderCalculationDate } from "./formulas/dates";
+
+export {
+	calcGlobalOrderBreathingLength,
+	calcMonthlyAverage,
+	calcOrderBreathingLength,
+	calcOrderPercentUsage,
+	calcTimeAndMaterialOrderBreathingLength,
+	calcUsedOrderAmount,
+} from "./formulas/orders";
+export type {
+	GlobalOrderBreathingLengthFormulaInput,
+	OrderBreathingLengthFormulaInput,
+	OrderMonthlyAverageFormulaInput,
+	OrderUsageFormulaInput,
+	TimeAndMaterialOrderBreathingLengthFormulaInput,
+} from "./formulas/orders";
+
 export { assertNotEmptyArr, tryIntoNonEmptyArr } from "./general/Arrays/nonEmptyArray";
 export type { NonEmptyArray } from "./general/Arrays/nonEmptyArray";
 
@@ -57,10 +94,10 @@ export {
 
 export { editUserPayloadSchema } from "./users";
 export type {
-    EditUserPayload,
-    UsersErrorMessages,
-    GetUsersResponse,
-    EditUserResponse,
-    ApproveUserResponse,
-    DeleteUserResponse,
+	EditUserPayload,
+	UsersErrorMessages,
+	GetUsersResponse,
+	EditUserResponse,
+	ApproveUserResponse,
+	DeleteUserResponse,
 } from "./users";

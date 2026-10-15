@@ -1,4 +1,4 @@
-import { DateString } from "./general/Date/dateSchema";
+import type { DateString } from "./general/Date/dateSchema";
 declare const brandSymbol: unique symbol;
 export type AssertOnly<T, UniqueTypeId> = T & {
 	readonly [brandSymbol]: UniqueTypeId;
@@ -8,8 +8,16 @@ type AsObjectSent<T> = {
 	[K in keyof T]: AsWireType<T[K]>;
 };
 
-// Automatically turns dates to DateStrings accounting for Date | null and whatnot
-export type AsWireType<T> = T extends Date ? DateString : T extends object ? AsObjectSent<T> : T;
+// Preserve JSON primitives (including brands) and recursively turn dates into DateStrings.
+export type AsWireType<T> = T extends string | number | boolean | null
+	? T
+	: T extends bigint | symbol | undefined
+		? never
+		: T extends Date
+			? DateString
+			: T extends object
+				? AsObjectSent<T>
+				: never;
 
 export type Ok<T> = { ok: true; result: T };
 export type Err<D> = { ok: false; error: D };
