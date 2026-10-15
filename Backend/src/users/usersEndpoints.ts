@@ -42,6 +42,8 @@ async function loadManagedUser(actor: User, personalNumber: PersonalNumber) {
 
 function checkedState(target: UserRecord) {
 	return {
+		firstName: target.firstName,
+		lastName: target.lastName,
 		personalNumber: target.personalNumber,
 		role: target.role,
 		mador: target.mador,
