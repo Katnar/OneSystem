@@ -57,6 +57,8 @@ export async function startServer(): Promise<Server> {
 
 	try {
 		await mongoose.connect(env.MONGO_URL, { serverSelectionTimeoutMS: 10000 });
+		// turns out this whole time there was a setting that can handle session forwarding as long as you use  mongoose.connection.transaction() god fucking dammit
+		mongoose.set("transactionAsyncLocalStorage", true);
 		return await new Promise<Server>((resolve, reject) => {
 			const server = app.listen(env.PORT);
 			server.once("error", reject);
