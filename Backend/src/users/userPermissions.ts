@@ -24,5 +24,7 @@ export function canManageUser(actor: User, target: ManagedUser): boolean {
 }
 
 export function requiresUserReapproval(actor: User, target: ManagedUser, proposed: ManagedUser): boolean {
-	return actor.role === Role.SECTION_HEAD && (proposed.mador !== target.mador || proposed.role === Role.SYSTEM_ADMIN);
+	const isSectionHead = hasPermission(allowOnly({ roles: [Role.SECTION_HEAD] }), actor);
+
+	return isSectionHead && (proposed.mador !== target.mador || proposed.role === Role.SYSTEM_ADMIN);
 }
