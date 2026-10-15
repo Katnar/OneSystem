@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import { type User, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
 import { authenticatedUserJwtPayloadSchema, type AuthenticatedUserJwtPayload } from "./authSchemas";
-import { usersModel } from "../models/user";
+import { usersModel } from "../users/userModel";
 import { env } from "../env";
 
 export type Locals = {
