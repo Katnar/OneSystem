@@ -40,16 +40,8 @@ async function loadManagedUser(actor: User, personalNumber: PersonalNumber) {
 	return target;
 }
 
-function checkedState(target: UserRecord) {
-	return {
-		firstName: target.firstName,
-		lastName: target.lastName,
-		personalNumber: target.personalNumber,
-		role: target.role,
-		mador: target.mador,
-		approvalStatus: target.approvalStatus,
-		meshekDescription: target.meshekDescription,
-	};
+function buildUserSnapshotFilter(target: UserRecord) {
+	return { ...target };
 }
 
 function serializeUser(user: UserRecord) {
@@ -114,7 +106,7 @@ export async function editUserEndpoint(
 
 	const updated = await usersModel
 		.findOneAndUpdate(
-			checkedState(target),
+			buildUserSnapshotFilter(target),
 			{
 				$set: {
 					role: body.role,
@@ -159,7 +151,7 @@ export async function approveUserEndpoint(
 
 	const updated = await usersModel
 		.findOneAndUpdate(
-			checkedState(target),
+			buildUserSnapshotFilter(target),
 			{ $set: { approvalStatus: UserApprovalStatus.APPROVED } },
 			{ new: true, runValidators: true }
 		)
@@ -182,7 +174,7 @@ export async function deleteUserEndpoint(
 	const personalNumber = parsePersonalNumber(req.params.personalNumber);
 	const target = await loadManagedUser(res.locals.user, personalNumber);
 
-	const deleted = await usersModel.findOneAndDelete(checkedState(target)).lean();
+	const deleted = await usersModel.findOneAndDelete(buildUserSnapshotFilter(target)).lean();
 
 	if (!deleted) {
 		throw httpError(409);
