@@ -1,6 +1,7 @@
 import { ContractStatus, type Contract } from "../contracts";
 import type { DateString } from "../general/Date/dateSchema";
 import type { MoneyILS } from "../general/NumberStrings/numberStrings";
+import type { AsWireType } from "../global";
 import { divideOrNull, finiteOrNull, type FormulaInput, type Months, type Percent } from "./common";
 
 export type ContractFormulaInput = FormulaInput<Pick<Contract, "agreementValueExclVat" | "usedAmountExclVat">>;
@@ -39,7 +40,7 @@ export function calcAvailableBalanceExclVat({
 	agreementValueExclVat,
 	usedAmountExclVat,
 }: ContractFormulaInput): MoneyILS | null {
-	return agreementValueExclVat === null || usedAmountExclVat === null
+	return typeof agreementValueExclVat !== "number" || typeof usedAmountExclVat !== "number"
 		? null
 		: finiteOrNull<MoneyILS>(agreementValueExclVat - usedAmountExclVat);
 }
@@ -52,8 +53,10 @@ export function calcContractPercentUsage({
 	return ratio === null ? null : finiteOrNull<Percent>(ratio * 100);
 }
 
-export function calcAgreementBalanceInclVat(availableBalanceExclVat: MoneyILS | null): MoneyILS | null {
-	return availableBalanceExclVat === null ? null : finiteOrNull<MoneyILS>(availableBalanceExclVat * VatMultiplier);
+export function calcAgreementBalanceInclVat(availableBalanceExclVat: AsWireType<MoneyILS> | null): MoneyILS | null {
+	return typeof availableBalanceExclVat !== "number"
+		? null
+		: finiteOrNull<MoneyILS>(availableBalanceExclVat * VatMultiplier);
 }
 
 export function isActiveContractStatus(status: ContractStatus): boolean {
@@ -69,8 +72,8 @@ export function isRenewalContractStatus(status: ContractStatus): boolean {
 }
 
 export function countActiveContractsForSupplier(
-	contracts: readonly Pick<Contract, "supplier" | "status">[],
-	supplier: Contract["supplier"]
+	contracts: readonly AsWireType<Pick<Contract, "supplier" | "status">>[],
+	supplier: AsWireType<Contract["supplier"]>
 ): number {
 	return contracts.filter(contract => contract.supplier === supplier && isActiveContractStatus(contract.status))
 		.length;

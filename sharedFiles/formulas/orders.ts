@@ -9,16 +9,17 @@ type GlobalOrder = Extract<Order, { type: typeof OrderType.GLOBAL }>;
 export type OrderUsageFormulaInput = FormulaInput<Pick<Order, "orderValueInclVat" | "balance">>;
 export type OrderMonthlyAverageFormulaInput = OrderUsageFormulaInput &
 	FormulaInput<Pick<Order, "startDate" | "endDate">>;
-export type TimeAndMaterialOrderBreathingLengthFormulaInput = Pick<OrderUsageFormulaInput, "balance"> & {
-	monthlyAverage: MoneyILS | null;
-};
+export type TimeAndMaterialOrderBreathingLengthFormulaInput = Pick<OrderUsageFormulaInput, "balance"> &
+	FormulaInput<{ monthlyAverage: MoneyILS }>;
 export type GlobalOrderBreathingLengthFormulaInput = FormulaInput<Pick<GlobalOrder, "balance" | "lastReceiptAmount">>;
 export type OrderBreathingLengthFormulaInput =
 	| (Pick<GlobalOrder, "type"> & GlobalOrderBreathingLengthFormulaInput)
 	| (Pick<Exclude<Order, GlobalOrder>, "type"> & OrderMonthlyAverageFormulaInput);
 
 export function calcUsedOrderAmount({ orderValueInclVat, balance }: OrderUsageFormulaInput): MoneyILS | null {
-	return orderValueInclVat === null || balance === null ? null : finiteOrNull<MoneyILS>(orderValueInclVat - balance);
+	return typeof orderValueInclVat !== "number" || typeof balance !== "number"
+		? null
+		: finiteOrNull<MoneyILS>(orderValueInclVat - balance);
 }
 
 export function calcOrderPercentUsage(order: OrderUsageFormulaInput): Percent | null {
