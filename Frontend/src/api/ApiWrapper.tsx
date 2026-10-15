@@ -1,121 +1,52 @@
-/* eslint-disable react-refresh/only-export-components */
-import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
-import { createContext, useContext, useState } from "react";
-import { SomeOrDefault } from "../../../sharedFiles/global";
-import { BrandedString } from "@onesystem/shared/general/Strings/brandedString";
+import axios, { type AxiosRequestConfig } from "axios";
+import { useEffect, useState } from "react";
 import { unexpectedError } from "../error-handling/unexpectedError";
-import type { SignUpPayload } from "@onesystem/shared/auth/authPayloads";
-import type { SignUpResultType, SsoSigninResultType } from "@onesystem/shared/auth/authResponses";
-import type { JWTToken, SSOToken } from "@onesystem/shared/auth/authTypes";
-
-type HostUrl = BrandedString<"host url">;
-
-export const API_URL = import.meta.env.VITE_API_HOST as HostUrl;
-const AUTH_TOKEN_KEY = "onesystem.authToken";
-
-export const authTokenStorage = {
-	get: () => localStorage.getItem(AUTH_TOKEN_KEY) as JWTToken | null,
-	set: (token: JWTToken) => localStorage.setItem(AUTH_TOKEN_KEY, token),
-	clear: () => localStorage.removeItem(AUTH_TOKEN_KEY),
-};
-
-// this makes it so URLS must start with `${API_URL}/`
-export type URL = `${HostUrl}/${string}`;
-
-declare module "axios" {
-	export interface AxiosRequestConfig {
-		skipAuth?: boolean;
-	}
-	export interface InternalAxiosRequestConfig {
-		skipAuth?: boolean;
-	}
-}
-// this wont be guaranteed to call a rerender but thats fine
-let clearEntireCache = () => {
-	console.info("attempted to clear cache before it's initialized");
-};
-
-const api = axios.create({
-	baseURL: API_URL,
-});
-
-api.interceptors.response.use(undefined, error => {
-	const response = error.response;
-	if (response?.status === 401 && !error.config?.skipAuth) {
-		authTokenStorage.clear();
-		clearEntireCache();
-	}
-	// if the response is in an expected structure like Result, return the response, else throw
-	return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
-});
-
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-	const token = config.skipAuth ? null : authTokenStorage.get();
-	if (token) {
-		config.headers.Authorization = `Bearer ${token}`;
-	}
-
-	return config;
-});
-
-export type Resource<T> = { isLoading: true } | { isLoading: false; data: T };
-export type NonClashingResult<T> = SomeOrDefault<T, "בקשה זהה כבר בתהליך">;
-type AuthEndpoints = {
-	ssoSignin: (ssoToken: SSOToken) => Resource<SsoSigninResultType>;
-	signUp: (body: SignUpPayload) => Promise<NonClashingResult<SignUpResultType>>;
-};
-
-export type APIContext = {
-	auth: AuthEndpoints;
-	get: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T>;
-	delete: <T>(url: URL, config?: AxiosRequestConfig) => Promise<NonClashingResult<T>>;
-	post: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<NonClashingResult<R>>;
-	patch: <P, R>(url: URL, body: P, config?: AxiosRequestConfig) => Promise<NonClashingResult<R>>;
-};
+import { apiClient, onUnauthorized, type URL } from "./apiClient";
+import { APIContext, type GetOptions, type NonClashingResult, type Resource } from "./apiContext";
 
 type DispatchKey = `${"GET" | "DELETE" | "POST" | "PATCH"} ${URL}`;
 
-const APIContext = createContext<APIContext | undefined>(undefined);
-
 export function APIContextProvider({ children }: { children: React.ReactNode }) {
-	const [dispatched] = useState<Set<DispatchKey>>(new Set());
+	const [dispatched] = useState<Map<DispatchKey, object | undefined>>(new Map());
 	const [cached, setCached] = useState<Map<DispatchKey, unknown>>(new Map());
 
-	clearEntireCache = () => {
-		setCached(new Map());
-	};
+	useEffect(() => {
+		return onUnauthorized(() => setCached(new Map()));
+	}, []);
 
-	const tryDispatch = async (key: DispatchKey, fn: () => Promise<void>) => {
-		if (!dispatched.has(key)) {
-			dispatched.add(key);
+	const tryDispatch = async (key: DispatchKey, fn: () => Promise<void>, scope?: object) => {
+		if (!dispatched.has(key) || dispatched.get(key) !== scope) {
+			dispatched.set(key, scope);
 			try {
 				await fn();
 			} catch (error) {
-				unexpectedError(error);
-				dispatched.delete(key);
+				if (!axios.isCancel(error)) unexpectedError(error);
 				return false;
 			} finally {
-				dispatched.delete(key);
+				// An older request must not release its replacement's pending marker.
+				if (dispatched.get(key) === scope) dispatched.delete(key);
 			}
 			return true;
 		}
 		return false;
 	};
 
-	const get: <T>(url: URL, config?: AxiosRequestConfig) => Resource<T> = <T,>(
-		url: URL,
-		config?: AxiosRequestConfig
-	) => {
+	const get = <T,>(url: URL, config?: AxiosRequestConfig, options?: GetOptions<T>): Resource<T> => {
 		const key: DispatchKey = `GET ${url}`;
-		tryDispatch(key, async () => {
-			const response = await api.get<T>(url, config);
-			setCached(prev => {
-				if (JSON.stringify(prev.get(key) ?? {}) === JSON.stringify(response.data)) {
-					return prev;
-				}
-				return new Map(prev).set(key, response.data);
-			});
-		});
+		tryDispatch(
+			key,
+			async () => {
+				const response = await apiClient.get<T>(url, config);
+				options?.onResponse?.(response.data);
+				setCached(prev => {
+					if (JSON.stringify(prev.get(key) ?? {}) === JSON.stringify(response.data)) {
+						return prev;
+					}
+					return new Map(prev).set(key, response.data);
+				});
+			},
+			options?.requestScope
+		);
 		return cached.has(key) ? { isLoading: false, data: cached.get(key) as T } : { isLoading: true };
 	};
 	// delete is a reserved word
@@ -127,7 +58,7 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		let respData: T;
 		if (
 			await tryDispatch(key, async () => {
-				respData = (await api.delete<T>(url, config)).data;
+				respData = (await apiClient.delete<T>(url, config)).data;
 			})
 		) {
 			return { some: true, value: respData! };
@@ -144,7 +75,7 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		let respData: R;
 		if (
 			await tryDispatch(key, async () => {
-				respData = (await api.post<R>(url, body, config)).data;
+				respData = (await apiClient.post<R>(url, body, config)).data;
 			})
 		) {
 			return { some: true, value: respData! };
@@ -161,7 +92,7 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		let respData: R;
 		if (
 			await tryDispatch(key, async () => {
-				respData = (await api.patch<R>(url, body, config)).data;
+				respData = (await apiClient.patch<R>(url, body, config)).data;
 			})
 		) {
 			return { some: true, value: respData! };
@@ -169,29 +100,5 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		return { some: false, value: "בקשה זהה כבר בתהליך" };
 	};
 
-	const authEndpoints: AuthEndpoints = {
-		ssoSignin: ssoToken => {
-			const response = get<SsoSigninResultType>(`${API_URL}/auth/sso_signin`, {
-				skipAuth: true,
-				headers: { Authorization: `Bearer ${ssoToken}` },
-			});
-			if (!response.isLoading && response.data.ok) authTokenStorage.set(response.data.result.jwt);
-			return response;
-		},
-		signUp: body => post<SignUpPayload, SignUpResultType>(`${API_URL}/auth/signup`, body, { skipAuth: true }),
-	};
-
-	return (
-		<APIContext.Provider value={{ auth: authEndpoints, get, delete: deleteFunc, post, patch }}>
-			{children}
-		</APIContext.Provider>
-	);
-}
-
-export function useAPI() {
-	const context = useContext(APIContext);
-	if (!context) {
-		throw new Error("useAPI must be used within an APIContextProvider");
-	}
-	return context;
+	return <APIContext.Provider value={{ get, delete: deleteFunc, post, patch }}>{children}</APIContext.Provider>;
 }
