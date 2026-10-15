@@ -4,8 +4,8 @@ import { divideOrNull, type Months } from "./common";
 export const AverageMonthInDays = 30;
 
 export function calcOrderCalculationDate(
-	currentDate: DateString | null,
-	endDate: DateString | null
+	currentDate: Date | DateString | null,
+	endDate: Date | DateString | null
 ): DateString | null {
 	if (currentDate === null || endDate === null) {
 		return null;
@@ -15,8 +15,8 @@ export function calcOrderCalculationDate(
 }
 
 export function calcElapsedOrderMonths(
-	startDate: DateString | null,
-	calculationDate: DateString | null
+	startDate: Date | DateString | null,
+	calculationDate: Date | DateString | null
 ): Months | null {
 	if (startDate === null || calculationDate === null) {
 		return null;

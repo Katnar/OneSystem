@@ -1,12 +1,33 @@
 import { ContractStatus, type Contract } from "../contracts";
 import type { DateString } from "../general/Date/dateSchema";
 import type { MoneyILS } from "../general/NumberStrings/numberStrings";
-import type { AsWireType } from "../global";
 import { divideOrNull, finiteOrNull, type FormulaInput, type Months, type Percent } from "./common";
 
 export type ContractFormulaInput = FormulaInput<Pick<Contract, "agreementValueExclVat" | "usedAmountExclVat">>;
 
 export const VatMultiplier = 1.18;
+
+const JerusalemCalendarFormatter = new Intl.DateTimeFormat("en-GB", {
+	timeZone: "Asia/Jerusalem",
+	year: "numeric",
+	month: "numeric",
+	day: "numeric",
+});
+
+function toJerusalemCalendarDate(value: Date | DateString): Date | null {
+	const date = new Date(value);
+	if (!Number.isFinite(date.getTime())) {
+		return null;
+	}
+	const parts = JerusalemCalendarFormatter.formatToParts(date);
+	const year = Number(parts.find(part => part.type === "year")?.value);
+	const month = Number(parts.find(part => part.type === "month")?.value);
+	const day = Number(parts.find(part => part.type === "day")?.value);
+	// Store Jerusalem's calendar fields in UTC so month arithmetic is independent of host timezone and DST.
+	const calendarDate = new Date(0);
+	calendarDate.setUTCFullYear(year, month - 1, day);
+	return calendarDate;
+}
 
 export const ActiveContractStatuses: readonly ContractStatus[] = [
 	ContractStatus.ACTIVE,
@@ -40,7 +61,7 @@ export function calcAvailableBalanceExclVat({
 	agreementValueExclVat,
 	usedAmountExclVat,
 }: ContractFormulaInput): MoneyILS | null {
-	return typeof agreementValueExclVat !== "number" || typeof usedAmountExclVat !== "number"
+	return agreementValueExclVat === null || usedAmountExclVat === null
 		? null
 		: finiteOrNull<MoneyILS>(agreementValueExclVat - usedAmountExclVat);
 }
@@ -53,10 +74,8 @@ export function calcContractPercentUsage({
 	return ratio === null ? null : finiteOrNull<Percent>(ratio * 100);
 }
 
-export function calcAgreementBalanceInclVat(availableBalanceExclVat: AsWireType<MoneyILS> | null): MoneyILS | null {
-	return typeof availableBalanceExclVat !== "number"
-		? null
-		: finiteOrNull<MoneyILS>(availableBalanceExclVat * VatMultiplier);
+export function calcAgreementBalanceInclVat(availableBalanceExclVat: MoneyILS | null): MoneyILS | null {
+	return availableBalanceExclVat === null ? null : finiteOrNull<MoneyILS>(availableBalanceExclVat * VatMultiplier);
 }
 
 export function isActiveContractStatus(status: ContractStatus): boolean {
@@ -72,8 +91,8 @@ export function isRenewalContractStatus(status: ContractStatus): boolean {
 }
 
 export function countActiveContractsForSupplier(
-	contracts: readonly AsWireType<Pick<Contract, "supplier" | "status">>[],
-	supplier: AsWireType<Contract["supplier"]>
+	contracts: readonly Pick<Contract, "supplier" | "status">[],
+	supplier: Contract["supplier"]
 ): number {
 	return contracts.filter(contract => contract.supplier === supplier && isActiveContractStatus(contract.status))
 		.length;
@@ -85,20 +104,18 @@ export function isContractUsageAtLeast(contract: ContractFormulaInput, threshold
 }
 
 export function isContractEndingWithinMonths(
-	endDate: DateString | null,
+	endDate: Date | DateString | null,
 	months: Months,
-	currentDate: DateString = new Date().toISOString() as DateString
+	currentDate: Date | DateString = new Date()
 ): boolean {
 	if (endDate === null || !Number.isInteger(months) || months < 0) {
 		return false;
 	}
 
-	// Compare UTC calendar dates so the time of day does not affect expiry.
-	const current = new Date(currentDate);
-	const end = new Date(endDate);
-	current.setUTCHours(0, 0, 0, 0);
-	end.setUTCHours(0, 0, 0, 0);
-	if (!Number.isFinite(current.getTime()) || !Number.isFinite(end.getTime())) {
+	// Compare Jerusalem calendar dates so the time of day does not affect expiry.
+	const current = toJerusalemCalendarDate(currentDate);
+	const end = toJerusalemCalendarDate(endDate);
+	if (current === null || end === null) {
 		return false;
 	}
 
