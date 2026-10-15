@@ -30,12 +30,12 @@ const api = axios.create({
 
 api.interceptors.response.use(undefined, error => {
 	const response = error.response;
-	if (response.status === 401) {
+	if (response?.status === 401) {
 		clearEntireCache();
 		alert("TODO: IMPLEMENT LOGOUT ON 401");
 	}
 	// if the response is in an expected structure like Result, return the response, else throw
-	return response?.data?.success === false ? Promise.resolve(response) : Promise.reject(error);
+	return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
