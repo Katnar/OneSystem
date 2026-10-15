@@ -17,12 +17,18 @@ export const editUserPayloadSchema = userManagementFieldsSchema
     }) satisfies z.ZodType<EditUserPayload>;
 
 export const USERS_ERROR_MESSAGES = {
-    INVALID_INPUT: "קלט אינו תקין",
-    UNAUTHORIZED: "המשתמש אינו מחובר",
-    FORBIDDEN: "המשתמש אינו רשאי",
-    NOT_FOUND: "משתמש אינו נמצא",
-    CONFLICT: "נמצא קונפליקט",
-    SERVER_ERROR: "שגיאת שרת, נסה שוב מאוחר יותר",
+    INVALID_INPUT:
+        "פרטי המשתמש אינם תקינים. יש לבדוק את המספר האישי ואת התאמת התפקיד, המדור ותיאור המשקים.",
+    UNAUTHORIZED:
+        "לא ניתן לאמת את ההתחברות. יש להתחבר מחדש. משתמש שטרם אושר אינו יכול לבצע פעולה זו.",
+    FORBIDDEN:
+        "אין לך הרשאה לצפות במשתמשים אלה או לבצע פעולה על המשתמש שנבחר.",
+    NOT_FOUND:
+        "המשתמש לא נמצא. יש לרענן את הרשימה ולנסות שוב.",
+    CONFLICT:
+        "פרטי המשתמש השתנו או שהבקשה כבר טופלה. יש לרענן את הרשימה לפני ביצוע פעולה נוספת.",
+    SERVER_ERROR:
+        "לא ניתן להשלים את הבקשה עקב שגיאת שרת. יש לרענן את הרשימה ולנסות שוב מאוחר יותר.",
 } as const;
 export type UsersErrorMessages = 
     (typeof USERS_ERROR_MESSAGES)[keyof typeof USERS_ERROR_MESSAGES];
