@@ -80,6 +80,8 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 				await fn();
 			} catch (error) {
 				unexpectedError(error);
+				dispatched.delete(key);
+				return false;
 			} finally {
 				dispatched.delete(key);
 			}
