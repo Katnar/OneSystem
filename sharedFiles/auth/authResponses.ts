@@ -12,12 +12,12 @@ export const SSO_SIGNIN_ERROR_MESSAGES = {
 	NOT_APPROVED: "המשתמש טרם אושר",
 	SERVER_ERROR: SERVER_ERROR_MESSAGE,
 } as const;
-export type SsoSigninErrorMessage =
-	(typeof SSO_SIGNIN_ERROR_MESSAGES)[keyof typeof SSO_SIGNIN_ERROR_MESSAGES];
+export type SsoSigninErrorMessage = (typeof SSO_SIGNIN_ERROR_MESSAGES)[keyof typeof SSO_SIGNIN_ERROR_MESSAGES];
 
 export const SIGN_UP_SUCCESS_MESSAGE = "משתמש נוצר בהצלחה";
 
 export const SIGN_UP_ERROR_MESSAGES = {
+	EXPIRED_TOKEN: SSO_SIGNIN_ERROR_MESSAGES.EXPIRED_TOKEN,
 	INVALID_INPUT: "קלט לא תקין",
 	INVALID_PERSONAL_NUMBER: "מספר אישי לא תקין",
 	ALREADY_EXISTS: "משתמש כבר קיים",

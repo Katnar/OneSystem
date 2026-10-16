@@ -13,29 +13,10 @@ import { JWT_LIFETIME_HOURS } from "@onesystem/shared/auth/authConsts";
 import { type JWTToken, type SSOToken, UserApprovalStatus } from "@onesystem/shared/auth/authTypes";
 import { z } from "zod";
 
-import {
-	firstNameSchema,
-	lastNameSchema,
-	rawSsoTokenPayloadSchema,
-	signUpPayloadSchema,
-	type RawSsoTokenPayload,
-	verifiedSsoTokenPayloadSchema,
-} from "./authSchemas";
+import { firstNameSchema, lastNameSchema, signUpPayloadSchema, verifiedSsoTokenPayloadSchema } from "./authSchemas";
 import { toAuthUserResponse } from "./toAuthUser";
 import { env } from "../env";
-
-function verifySsoToken(token: SSOToken): RawSsoTokenPayload | null {
-	try {
-		const parsedPayload = rawSsoTokenPayloadSchema.safeParse(jwt.verify(token, env.SSO_DECRYPT_KEY_JWT));
-		if (!parsedPayload.success) {
-			return null;
-		}
-
-		return parsedPayload.data;
-	} catch {
-		return null;
-	}
-}
+import { verifySsoToken } from "./verifySsoToken";
 
 function isDuplicateKeyError(error: unknown): boolean {
 	return z.object({ code: z.literal(11000) }).safeParse(error).success;
@@ -64,12 +45,12 @@ export const ssoSigninEndpoint = async (
 		}
 
 		const verifiedSsoToken = verifySsoToken(ssoToken);
-		if (!verifiedSsoToken) {
-			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
+		if (!verifiedSsoToken.ok) {
+			res.status(401).json({ ok: false, error: verifiedSsoToken.error });
 			return;
 		}
 
-		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken);
+		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken.result);
 
 		if (!verifiedPayload.success) {
 			res.status(401).json({ ok: false, error: SSO_SIGNIN_ERROR_MESSAGES.BAD_TOKEN });
@@ -139,15 +120,18 @@ export async function signUpEndpoint(
 		const { ssoToken, user } = parsedPayload.data;
 
 		const verifiedSsoToken = verifySsoToken(ssoToken);
-		if (!verifiedSsoToken) {
+		if (!verifiedSsoToken.ok) {
 			res.status(400).json({
 				ok: false,
-				error: SIGN_UP_ERROR_MESSAGES.INVALID_INPUT,
+				error:
+					verifiedSsoToken.error === SSO_SIGNIN_ERROR_MESSAGES.EXPIRED_TOKEN
+						? SIGN_UP_ERROR_MESSAGES.EXPIRED_TOKEN
+						: SIGN_UP_ERROR_MESSAGES.INVALID_INPUT,
 			});
 			return;
 		}
 
-		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken);
+		const verifiedPayload = verifiedSsoTokenPayloadSchema.safeParse(verifiedSsoToken.result);
 		if (!verifiedPayload.success) {
 			res.status(400).json({
 				ok: false,
