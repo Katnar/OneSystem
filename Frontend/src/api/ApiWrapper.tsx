@@ -40,7 +40,6 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 				if (!axios.isCancel(error) && !(axios.isAxiosError(error) && error.code === "ERR_AUTH_REQUIRED")) {
 					unexpectedError(error);
 				}
-				// Transport failures must not be reported as duplicate requests.
 				throw error;
 			} finally {
 				dispatched.delete(pendingKey);
@@ -100,7 +99,6 @@ export function APIContextProvider({ children }: { children: React.ReactNode }) 
 		).catch(error => {
 			cacheResponse({ isLoading: false, error, retry: clearEntireCache });
 		});
-		// Preserve dev's revalidation behavior, including retrying expected API failures.
 		return cachedResource ? (cachedResource as Resource<T>) : { isLoading: true };
 	};
 	// delete is a reserved word

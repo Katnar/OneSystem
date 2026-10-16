@@ -3,8 +3,6 @@
 hello :)
 One system for the win!!
 
-## Development setup
-
 Development setup lives on `dev`; `main` contains only this project's README. Authentication is on `feature/auth`.
 
 Prerequisites:

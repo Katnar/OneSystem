@@ -11,7 +11,6 @@ function writeToken(token: JWTToken | null) {
 		lastPersistedToken = token;
 		hasStorageWriteFailed = false;
 	} catch {
-		// The Redux session must still work when browser storage cannot be changed.
 		hasStorageWriteFailed = true;
 	}
 }

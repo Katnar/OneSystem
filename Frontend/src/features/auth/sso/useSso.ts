@@ -14,7 +14,6 @@ export function useSso() {
 	const dispatch = useAppDispatch();
 	const store = useAppStore();
 	const isSigningIn = useAppSelector(selectIsSigningIn);
-	// Call from an event or effect; .unwrap() returns the shared SSO Result, and .abort() cancels the attempt.
 	const signIn = useCallback((ssoToken: SSOToken) => dispatch(ssoSignin(ssoToken)), [dispatch]);
 
 	const signUp = async (body: SignUpPayload) => {

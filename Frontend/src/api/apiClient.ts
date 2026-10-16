@@ -54,7 +54,6 @@ export function createApiClient(store?: Pick<Store<RootState>, "getState" | "dis
 			if (!axios.isAxiosError<Result<unknown, unknown>>(error)) return Promise.reject(error);
 			const response = error.response;
 			checkResponseSession(error.config, response?.status);
-			// Expected API failures remain Result values; unexpected transport failures reject lol.
 			return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
 		}
 	);
