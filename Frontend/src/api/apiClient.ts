@@ -1,7 +1,10 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, CanceledError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import type { BrandedString } from "@onesystem/shared/general/Strings/brandedString";
-import { store } from "../app/store";
-import { selectAuthToken, sessionCleared } from "../features/auth";
+import type { Result } from "@onesystem/shared/global";
+import type { Store } from "@reduxjs/toolkit";
+import type { RootState } from "../app/store";
+import { sessionExpired } from "../features/auth/authSlice";
+import { synchronizeAuthSession } from "../features/auth/synchronizeAuthSession";
 
 type HostUrl = BrandedString<"host url">;
 
@@ -12,39 +15,49 @@ declare module "axios" {
 	export interface AxiosRequestConfig {
 		skipAuth?: boolean;
 	}
-
-	export interface InternalAxiosRequestConfig {
-		skipAuth?: boolean;
-	}
 }
 
-const unauthorizedListeners = new Set<() => void>();
+export function createApiClient(store?: Pick<Store<RootState>, "getState" | "dispatch">): AxiosInstance {
+	const apiClient = axios.create({ baseURL: API_URL });
+	const sessionVersionByRequest = new WeakMap<InternalAxiosRequestConfig, number>();
+	const checkResponseSession = (config: InternalAxiosRequestConfig | undefined, status?: number) => {
+		if (!store || !config || config.skipAuth) return;
+		const requestSessionVersion = sessionVersionByRequest.get(config);
+		if (requestSessionVersion === undefined) return;
 
-export function onUnauthorized(listener: () => void) {
-	unauthorizedListeners.add(listener);
-	return () => {
-		unauthorizedListeners.delete(listener);
+		const currentSession = synchronizeAuthSession(store);
+		if (requestSessionVersion !== currentSession.sessionVersion) {
+			throw new CanceledError("Request session changed");
+		}
+		if (status === 401) {
+			store.dispatch(sessionExpired());
+			throw new CanceledError("Session expired");
+		}
 	};
-}
 
-export const apiClient = axios.create({ baseURL: API_URL });
-
-apiClient.interceptors.request.use(
-	(config: InternalAxiosRequestConfig) => {
-		const token = config.skipAuth ? null : selectAuthToken(store.getState());
-		if (token) config.headers.Authorization = `Bearer ${token}`;
+	apiClient.interceptors.request.use(config => {
+		if (store && !config.skipAuth) {
+			const session = synchronizeAuthSession(store);
+			if (!session.token) throw new AxiosError("Authentication required", "ERR_AUTH_REQUIRED", config);
+			sessionVersionByRequest.set(config, session.sessionVersion);
+			config.headers.Authorization = `Bearer ${session.token}`;
+		}
 		return config;
-	},
-	undefined,
-	{ synchronous: true }
-);
+	});
 
-apiClient.interceptors.response.use(undefined, error => {
-	const response = error.response;
-	if (response?.status === 401 && !error.config?.skipAuth) {
-		store.dispatch(sessionCleared());
-		unauthorizedListeners.forEach(listener => listener());
-	}
-	// Expected API failures remain Result values; unexpected transport failures reject.
-	return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
-});
+	apiClient.interceptors.response.use(
+		response => {
+			checkResponseSession(response.config, response.status);
+			return response;
+		},
+		(error: unknown) => {
+			if (!axios.isAxiosError<Result<unknown, unknown>>(error)) return Promise.reject(error);
+			const response = error.response;
+			checkResponseSession(error.config, response?.status);
+			// Expected API failures remain Result values; unexpected transport failures reject lol.
+			return response?.data?.ok === false ? Promise.resolve(response) : Promise.reject(error);
+		}
+	);
+
+	return apiClient;
+}

@@ -1,43 +1,56 @@
 import type { JWTToken } from "@onesystem/shared/auth/authTypes";
 
 const AUTH_TOKEN_KEY = "onesystem.authToken";
+let lastPersistedToken: JWTToken | null = null;
+let hasStorageWriteFailed = false;
+
+function writeToken(token: JWTToken | null) {
+	try {
+		if (token === null) localStorage.removeItem(AUTH_TOKEN_KEY);
+		else localStorage.setItem(AUTH_TOKEN_KEY, token);
+		lastPersistedToken = token;
+		hasStorageWriteFailed = false;
+	} catch {
+		// The Redux session must still work when browser storage cannot be changed.
+		hasStorageWriteFailed = true;
+	}
+}
 
 export const authTokenStorage = {
-	get(): JWTToken | null {
+	get(inMemoryToken: JWTToken | null = null): JWTToken | null {
 		try {
-			return (localStorage.getItem(AUTH_TOKEN_KEY) as JWTToken | null) || null;
+			const storedToken = (localStorage.getItem(AUTH_TOKEN_KEY) as JWTToken | null) || null;
+			// A failed write must not revive the old persisted session. A newer external value still wins.
+			if (hasStorageWriteFailed && storedToken === lastPersistedToken) return inMemoryToken;
+			lastPersistedToken = storedToken;
+			hasStorageWriteFailed = false;
+			return storedToken;
 		} catch {
-			return null;
+			return inMemoryToken;
 		}
 	},
 	set(token: JWTToken) {
-		try {
-			localStorage.setItem(AUTH_TOKEN_KEY, token);
-		} catch {
-			// The current session can still work when browser storage is unavailable.
-		}
+		writeToken(token);
 	},
 	clear() {
-		try {
-			localStorage.removeItem(AUTH_TOKEN_KEY);
-		} catch {
-			// Clearing the in-memory session must not depend on browser storage.
-		}
+		writeToken(null);
 	},
-	subscribe(onChange: (token: JWTToken | null) => void) {
-		const onStorage = (event: StorageEvent) => {
+	subscribe(onTokenChange: (token: JWTToken | null) => void) {
+		const handleStorageChange = (event: StorageEvent) => {
 			if (event.key !== AUTH_TOKEN_KEY && event.key !== null) return;
 
 			try {
 				if (event.storageArea !== localStorage) return;
 				// Read the latest value: another tab may have written again since this event was queued.
-				onChange((localStorage.getItem(AUTH_TOKEN_KEY) as JWTToken | null) || null);
+				lastPersistedToken = (localStorage.getItem(AUTH_TOKEN_KEY) as JWTToken | null) || null;
+				hasStorageWriteFailed = false;
+				onTokenChange(lastPersistedToken);
 			} catch {
 				// Keep the in-memory session when browser storage becomes unavailable.
 			}
 		};
 
-		window.addEventListener("storage", onStorage);
-		return () => window.removeEventListener("storage", onStorage);
+		window.addEventListener("storage", handleStorageChange);
+		return () => window.removeEventListener("storage", handleStorageChange);
 	},
 };

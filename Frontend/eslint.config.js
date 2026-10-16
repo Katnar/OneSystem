@@ -21,6 +21,7 @@ export default defineConfig([
 		},
 	},
 	{
+		basePath: import.meta.dirname,
 		files: ["src/**/*.{ts,tsx}"],
 		ignores: ["src/app/hooks.ts"],
 		rules: {
@@ -31,7 +32,7 @@ export default defineConfig([
 						{
 							name: "react-redux",
 							importNames: ["useDispatch", "useSelector", "useStore"],
-							message: "Use the typed hooks from src/app/hooks.ts.",
+							message: "Define and use typed hooks in src/app/hooks.ts.",
 						},
 					],
 				},
